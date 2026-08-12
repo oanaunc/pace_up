@@ -79,7 +79,7 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>com.paceup.backup</string>
+			<string>com.oanarinaldi.paceup.backup</string>
 			<key>UTTypeDescription</key>
 			<string>Pace Up Backup</string>
 			<key>UTTypeConformsTo</key>

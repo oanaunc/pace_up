@@ -18,7 +18,7 @@ import SwiftUI
 
 enum WidgetAppGroup {
     /// Must match `AppGroup.identifier` in the app target.
-    static let identifier = "group.com.paceup.shared"
+    static let identifier = "group.com.oanarinaldi.paceup"
     static let snapshotKey = "widgetSnapshot"
     static let stepGoalKey = "dailyStepGoal"
 

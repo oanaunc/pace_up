@@ -107,7 +107,7 @@ enum SharedDefaultsKey {
 
 enum AppGroup {
     /// Must match the App Group capability on both the app and widget targets.
-    static let identifier = "group.com.paceup.shared"
+    static let identifier = "group.com.oanarinaldi.paceup"
 
     static var defaults: UserDefaults {
         UserDefaults(suiteName: identifier) ?? .standard

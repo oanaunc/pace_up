@@ -78,7 +78,7 @@ final class RecordingJournal: @unchecked Sendable {
 
     static let shared = RecordingJournal()
 
-    private let queue = DispatchQueue(label: "com.paceup.recording-journal", qos: .utility)
+    private let queue = DispatchQueue(label: "com.oanarinaldi.paceup.recording-journal", qos: .utility)
     private var handle: FileHandle?
     private var header: JournalHeader?
     private var pointCount = 0

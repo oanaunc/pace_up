@@ -37,86 +37,97 @@ struct ActivityDetailView: View {
 
     private var routePoints: [RoutePoint] { activity.routePoints }
 
+    // The body is split into a scroll view, a toolbar and two modifier groups.
+    // As one expression — eleven modifiers, three inline `Binding(get:set:)`
+    // constructions and four trailing closures — it exceeds the Swift type
+    // checker's budget and fails with "unable to type-check this expression in
+    // reasonable time", reported at an arbitrary line inside it. Keep the
+    // pieces separate when adding to this screen.
     var body: some View {
+        scrollContent
+            .background(Color.paceInk.ignoresSafeArea())
+            .navigationTitle(activity.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { toolbarMenu }
+            .sheet(isPresented: $isEditing) { editSheet }
+            .modifier(makePresentations())
+    }
+
+    private var scrollContent: some View {
         ScrollView {
             VStack(spacing: PaceSpacing.l) {
                 mapHeader
                 headline
                 PillPicker(options: Tab.allCases, title: \.title, selection: $tab)
-
-                switch tab {
-                case .overview: overview
-                case .splits:   splitsSection
-                case .charts:   chartsSection
-                }
+                tabContent
             }
             .padding(.horizontal, PaceSpacing.l)
             .padding(.bottom, 100)
         }
-        .background(Color.paceInk.ignoresSafeArea())
-        .navigationTitle(activity.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        draftTitle = activity.title
-                        draftNote = activity.note ?? ""
-                        isEditing = true
-                    } label: {
-                        Label(String(localized: "Edit"), systemImage: "pencil")
-                    }
+    }
 
-                    Button {
-                        exportGPX()
-                    } label: {
-                        Label(String(localized: "Export GPX"), systemImage: "square.and.arrow.up")
-                    }
-                    .disabled(!activity.hasFullRoute)
+    @ViewBuilder
+    private var tabContent: some View {
+        switch tab {
+        case .overview: overview
+        case .splits:   splitsSection
+        case .charts:   chartsSection
+        }
+    }
 
-                    Divider()
-
-                    Button(role: .destructive) {
-                        showsDeleteConfirmation = true
-                    } label: {
-                        Label(String(localized: "Delete Activity"), systemImage: "trash")
-                    }
+    private var toolbarMenu: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                Button {
+                    draftTitle = activity.title
+                    draftNote = activity.note ?? ""
+                    isEditing = true
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Label(String(localized: "Edit"), systemImage: "pencil")
                 }
+
+                Button(action: exportGPX) {
+                    Label(String(localized: "Export GPX"), systemImage: "square.and.arrow.up")
+                }
+                .disabled(!activity.hasFullRoute)
+
+                Divider()
+
+                Button(role: .destructive) {
+                    showsDeleteConfirmation = true
+                } label: {
+                    Label(String(localized: "Delete Activity"), systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
             }
         }
-        .sheet(isPresented: $isEditing) { editSheet }
-        .sheet(item: Binding(
-            get: { shareURL.map { ShareItem(url: $0) } },
-            set: { shareURL = $0?.url }
-        )) { item in
-            ShareLink(item: item.url) {
-                Label(String(localized: "Share GPX"), systemImage: "square.and.arrow.up")
-            }
-            .presentationDetents([.height(160)])
-        }
-        .alert(String(localized: "Export failed"), isPresented: Binding(
-            get: { exportError != nil },
-            set: { if !$0 { exportError = nil } }
-        )) {
-            Button(String(localized: "OK"), role: .cancel) {}
-        } message: {
-            Text(exportError ?? "")
-        }
-        .confirmationDialog(
-            String(localized: "Delete this activity?"),
-            isPresented: $showsDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(String(localized: "Delete"), role: .destructive) {
+    }
+
+    private func makePresentations() -> ActivityDetailPresentations {
+        ActivityDetailPresentations(
+            shareItem: shareItemBinding,
+            exportError: exportErrorBinding,
+            showsDeleteConfirmation: $showsDeleteConfirmation,
+            onDelete: {
                 ActivityStore(context: context).delete(activity)
                 dismiss()
             }
-            Button(String(localized: "Cancel"), role: .cancel) {}
-        } message: {
-            Text("This removes it from Pace Up. Any workout written to Apple Health stays there.")
-        }
+        )
+    }
+
+    private var shareItemBinding: Binding<ShareItem?> {
+        Binding<ShareItem?>(
+            get: { shareURL.map { ShareItem(url: $0) } },
+            set: { shareURL = $0?.url }
+        )
+    }
+
+    private var exportErrorBinding: Binding<String?> {
+        Binding<String?>(
+            get: { exportError },
+            set: { exportError = $0 }
+        )
     }
 
     // MARK: Header
@@ -366,4 +377,45 @@ struct ActivityDetailView: View {
 struct ShareItem: Identifiable {
     let url: URL
     var id: String { url.absoluteString }
+}
+
+/// Share sheet, export-failure alert and delete confirmation, lifted out of
+/// `body` so each is type-checked on its own.
+private struct ActivityDetailPresentations: ViewModifier {
+    @Binding var shareItem: ShareItem?
+    @Binding var exportError: String?
+    @Binding var showsDeleteConfirmation: Bool
+    var onDelete: () -> Void
+
+    private var isErrorPresented: Binding<Bool> {
+        Binding<Bool>(
+            get: { exportError != nil },
+            set: { if !$0 { exportError = nil } }
+        )
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: $shareItem) { item in
+                ShareLink(item: item.url) {
+                    Label(String(localized: "Share GPX"), systemImage: "square.and.arrow.up")
+                }
+                .presentationDetents([.height(160)])
+            }
+            .alert(String(localized: "Export failed"), isPresented: isErrorPresented) {
+                Button(String(localized: "OK"), role: .cancel) {}
+            } message: {
+                Text(exportError ?? "")
+            }
+            .confirmationDialog(
+                String(localized: "Delete this activity?"),
+                isPresented: $showsDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button(String(localized: "Delete"), role: .destructive, action: onDelete)
+                Button(String(localized: "Cancel"), role: .cancel) {}
+            } message: {
+                Text("This removes it from Pace Up. Any workout written to Apple Health stays there.")
+            }
+    }
 }

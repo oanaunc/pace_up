@@ -22,17 +22,17 @@ Requires Xcode 26 or later and a Mac. It will not build in a simulator-only CI w
 
 Three things must change, all in Xcode's target settings.
 
-### 1. Bundle identifiers
+### 1. Bundle identifiers — already set
 
-Placeholders are `com.paceup.PaceUp` and `com.paceup.PaceUp.Widgets`. Replace `com.paceup` with a prefix you own on both targets. The widget's identifier **must** stay prefixed by the app's.
+`com.oanarinaldi.paceup` and `com.oanarinaldi.paceup.widget`, matching the convention used by harsh_comebacks, ai_home_makeover and MyLists on this machine.
 
-### 2. Signing team
+### 2. Signing team — already set
 
-Select each target → Signing & Capabilities → Team. `CODE_SIGN_STYLE` is already `Automatic`.
+`DEVELOPMENT_TEAM = HBD3XXQK45` on all four build configurations.
 
-### 3. App Group
+### 3. App Group — register it once in the developer portal
 
-The App Group `group.com.paceup.shared` appears in **four** places and all four must match:
+`group.com.oanarinaldi.paceup` appears in **four** places and all four already match:
 
 | Where | File |
 |---|---|
@@ -41,14 +41,26 @@ The App Group `group.com.paceup.shared` appears in **four** places and all four 
 | App source | `PaceUp/Models/AppSettings.swift` → `AppGroup.identifier` |
 | Widget source | `PaceUpWidgets/SharedSnapshot.swift` → `WidgetAppGroup.identifier` |
 
-Register the group in your developer account, then enable the App Groups capability on both targets and tick it.
+The group does **not** yet exist in your developer account. The easiest way to create it is
+from Xcode: select the app target → Signing & Capabilities → **+ Capability** → App Groups →
+**+** → type `group.com.oanarinaldi.paceup`. Xcode registers it in the portal for you. Then
+repeat on the widget target and tick the same group (it will already be in the list).
 
-If these drift apart, the app builds and runs but the widget silently shows placeholder data forever — there is no error.
+Failing that, create it manually at
+[Certificates, Identifiers & Profiles → Identifiers → App Groups](https://developer.apple.com/account/resources/identifiers/list/applicationGroup).
+
+If these four ever drift apart, the app builds and runs but the widget silently shows placeholder data forever — there is no error.
 
 ### Capabilities checklist
 
 - **App target:** HealthKit, App Groups, Background Modes → Location updates
 - **Widget target:** App Groups
+
+Leave **HealthKit → Clinical Health Records** unticked. That is a separate entitlement
+(`com.apple.developer.healthkit.access`) for reading medical records from health providers,
+it must be granted by Apple on request, and Pace Up has no use for it. Ticking it makes every
+build fail with *"HealthKit Access (Verifiable Health Records) capability needs to be assigned
+to your team and bundle identifier by Apple."*
 
 ---
 
