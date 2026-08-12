@@ -180,19 +180,48 @@ final class HealthKitManager {
             let start = calendar.date(byAdding: .day, value: -6, to: today)
         else { return }
 
-        var results: [DailyMetric] = []
+        // Build the seven day windows first, then query them concurrently.
+        //
+        // This loop used to `await` inside itself, which made seven full-day
+        // statistics queries strictly sequential. Each one is an XPC round trip
+        // into healthd that computes per-source sums for every bucket in the
+        // day, so the total was frequently multiple seconds — and it sat on the
+        // critical path of saving an activity.
+        var windows: [(start: Date, end: Date)] = []
         var cursor = start
         while cursor < end {
             let dayEnd = min(calendar.date(byAdding: .day, value: 1, to: cursor) ?? end, end)
-            let value = await deduplicatedSum(
-                type: PaceUpHealthTypes.stepCount,
-                unit: .count(),
-                from: cursor,
-                to: dayEnd
-            )
-            results.append(DailyMetric(date: cursor, value: value))
+            windows.append((cursor, dayEnd))
             cursor = dayEnd
         }
+
+        let results = await withTaskGroup(of: (Int, Double).self) { group -> [DailyMetric] in
+            for (index, window) in windows.enumerated() {
+                group.addTask { [weak self] in
+                    guard let self else { return (index, 0) }
+                    let value = await self.deduplicatedSum(
+                        type: PaceUpHealthTypes.stepCount,
+                        unit: .count(),
+                        from: window.start,
+                        to: window.end,
+                        // Coarser buckets for historical days. Ten-minute
+                        // resolution matters for today, where the user can
+                        // watch the number move; for a bar in a weekly chart a
+                        // half-hour resolution is invisible and costs a sixth
+                        // as much to compute.
+                        bucket: Self.historicalBucketInterval
+                    )
+                    return (index, value)
+                }
+            }
+
+            var byIndex = [Int: Double]()
+            for await (index, value) in group { byIndex[index] = value }
+            return windows.enumerated().map { index, window in
+                DailyMetric(date: window.start, value: byIndex[index] ?? 0)
+            }
+        }
+
         weeklySteps = results
     }
 
@@ -267,11 +296,16 @@ final class HealthKitManager {
     /// carrying their phone and wearing their watch.
     private static let bucketInterval = DateComponents(minute: 10)
 
+    /// Used for whole past days, where a half-hour resolution is indistinguishable
+    /// in a bar chart but costs a sixth as much to compute.
+    private static let historicalBucketInterval = DateComponents(minute: 30)
+
     private func deduplicatedSum(type: HKQuantityType,
                                  unit: HKUnit,
                                  from start: Date,
                                  to end: Date,
-                                 excludingPaceUp: Bool = false) async -> Double {
+                                 excludingPaceUp: Bool = false,
+                                 bucket: DateComponents? = nil) async -> Double {
         guard isAvailable, end > start else { return 0 }
 
         var predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
@@ -289,7 +323,7 @@ final class HealthKitManager {
             predicate: .quantitySample(type: type, predicate: predicate),
             options: [.cumulativeSum, .separateBySource],
             anchorDate: anchor,
-            intervalComponents: Self.bucketInterval
+            intervalComponents: bucket ?? Self.bucketInterval
         )
 
         do {

@@ -19,19 +19,31 @@ struct ActivityStore {
 
     // MARK: Create
 
-    /// Persists a finished recording.
+    /// Commits a finished recording to the local database. Phase one of two.
     ///
-    /// The HealthKit round trip matters: Pace Up's live energy figure is a
-    /// MET estimate, and its step count comes from Core Motion. Both are
-    /// replaced with HealthKit's own numbers once the workout has been written,
-    /// so a saved activity agrees with the Health app.
+    /// ── Why saving is split ────────────────────────────────────────────────
+    ///
+    /// This used to be one `async` method that awaited three HealthKit reads,
+    /// a workout write, a route write, and then a widget refresh that fired
+    /// eleven more HealthKit queries — all before the summary sheet dismissed.
+    /// On a device with an Apple Watch and a few years of history that is
+    /// several seconds of staring at a "Saving…" button, and it reads as a
+    /// hang rather than as work.
+    ///
+    /// None of that work is needed to make the run safe. Writing to SwiftData
+    /// is local and takes milliseconds. So phase one commits and returns, the
+    /// UI moves on immediately, and `syncWithHealth` reconciles afterwards.
+    ///
+    /// The consequence to be aware of: for a second or two the saved activity
+    /// carries Pace Up's own step count (Core Motion) and its MET-estimated
+    /// energy rather than HealthKit's figures. Phase two overwrites both. The
+    /// numbers are the same ones the summary screen was already showing, so
+    /// nothing visibly jumps.
     @discardableResult
-    func save(_ finished: FinishedActivity,
-              title: String? = nil,
-              note: String? = nil,
-              feeling: Int? = nil,
-              units: MeasurementUnits,
-              health: HealthKitManager) async -> Activity {
+    func saveLocally(_ finished: FinishedActivity,
+                     title: String? = nil,
+                     note: String? = nil,
+                     feeling: Int? = nil) -> Activity {
 
         let activity = Activity(
             id: finished.sessionID,
@@ -52,29 +64,59 @@ struct ActivityStore {
         )
         activity.splitsData = SampleCodec.encodeSplits(finished.splits)
 
-        context.insert(activity)
-
-        // Pull authoritative numbers from HealthKit where they exist.
-        let healthSteps = await health.steps(from: finished.startDate, to: finished.endDate)
-        if healthSteps > 0 { activity.steps = healthSteps }
-
-        let healthEnergy = await health.activeEnergy(from: finished.startDate, to: finished.endDate)
-        if healthEnergy > 0 { activity.activeEnergy = healthEnergy }
-
-        var heartRates = finished.heartRates
-        if heartRates.isEmpty {
-            heartRates = await health.heartRateSamples(from: finished.startDate, to: finished.endDate)
-        }
-        if !heartRates.isEmpty {
-            let values = heartRates.map(\.bpm)
+        if !finished.heartRates.isEmpty {
+            let values = finished.heartRates.map(\.bpm)
             activity.averageHeartRate = values.reduce(0, +) / Double(values.count)
             activity.maxHeartRate = values.max()
         }
 
-        activity.attachRoute(finished.points, heartRate: heartRates)
+        activity.attachRoute(finished.points, heartRate: finished.heartRates)
+
+        context.insert(activity)
+        try? context.save()
+
+        return activity
+    }
+
+    /// Reconciles a saved activity with HealthKit and refreshes the widget.
+    /// Phase two — safe to run after the UI has moved on.
+    ///
+    /// Deliberately started as an unstructured `Task` from the summary screen's
+    /// Save action rather than with `.task`, so dismissing the sheet does not
+    /// cancel it. If the app is killed mid-way, the activity is already in the
+    /// database; only the HealthKit workout would be missing, and the numbers
+    /// stay at Pace Up's own estimates.
+    func syncWithHealth(_ activity: Activity,
+                        finished: FinishedActivity,
+                        units: MeasurementUnits,
+                        health: HealthKitManager) async {
+
+        // The three activity-window reads are independent — run them together
+        // rather than one after another.
+        async let stepsTask = health.steps(from: finished.startDate, to: finished.endDate)
+        async let energyTask = health.activeEnergy(from: finished.startDate, to: finished.endDate)
+        async let heartTask = health.heartRateSamples(from: finished.startDate, to: finished.endDate)
+
+        let (healthSteps, healthEnergy, healthHeartRates) = await (stepsTask, energyTask, heartTask)
+
+        if healthSteps > 0 { activity.steps = healthSteps }
+        if healthEnergy > 0 { activity.activeEnergy = healthEnergy }
+
+        // Only replace the heart-rate series if the recorder captured none.
+        if finished.heartRates.isEmpty, !healthHeartRates.isEmpty {
+            let values = healthHeartRates.map(\.bpm)
+            activity.averageHeartRate = values.reduce(0, +) / Double(values.count)
+            activity.maxHeartRate = values.max()
+            activity.attachRoute(finished.points, heartRate: healthHeartRates)
+        }
+
+        try? context.save()
 
         // Write back to HealthKit so the workout and route survive Pace Up
-        // being deleted.
+        // being deleted. This is the slowest single step — inserting a few
+        // thousand CLLocations into an HKWorkoutRouteBuilder is not fast — and
+        // it is precisely the sort of thing the user should not be made to
+        // watch.
         let workoutID = await health.saveWorkout(
             activity: finished.type,
             start: finished.startDate,
@@ -83,16 +125,12 @@ struct ActivityStore {
             energy: activity.activeEnergy,
             route: finished.locations
         )
-        activity.healthKitWorkoutUUID = workoutID
+        if let workoutID {
+            activity.healthKitWorkoutUUID = workoutID
+            try? context.save()
+        }
 
-        try? context.save()
         await refreshWidgetSnapshot(health: health, units: units)
-
-        // Achievements are deliberately evaluated by the caller, not here.
-        // Evaluating in both places meant the first pass inserted the unlocks
-        // and the second returned an empty array, so the summary screen's "New
-        // achievement" banner could never appear.
-        return activity
     }
 
     // MARK: Update

@@ -238,32 +238,62 @@ struct ActivitySummaryView: View {
         .background(.ultraThinMaterial)
     }
 
+    /// Saving is two phases, and only the first one blocks the user.
+    ///
+    /// Phase one writes the activity to SwiftData and evaluates achievements —
+    /// both local, both milliseconds. The run is safe at that point, so the
+    /// sheet closes.
+    ///
+    /// Phase two reconciles with HealthKit and rewrites the widget snapshot.
+    /// That involves a workout write, a route write with several thousand
+    /// locations, and a batch of statistics queries; on a device with a Watch
+    /// and years of history it can take seconds. Making the user watch a
+    /// "Saving…" button through all of it is what made finishing a run feel
+    /// broken.
+    ///
+    /// The `Task` below is unstructured on purpose. A `.task` modifier would be
+    /// cancelled the moment the sheet dismisses, which would abandon the
+    /// HealthKit write half-done.
     private func save() {
         guard !isSaving else { return }
         isSaving = true
 
-        Task {
-            let store = ActivityStore(context: context)
-            let activity = await store.save(
-                finished,
-                title: title.isEmpty ? nil : title,
-                note: note.isEmpty ? nil : note,
-                feeling: feeling,
-                units: settings.units,
-                health: health
-            )
-            newAchievements = AchievementEngine.evaluate(context: context, triggeredBy: activity)
-            isSaving = false
+        let store = ActivityStore(context: context)
+        let activity = store.saveLocally(
+            finished,
+            title: title.isEmpty ? nil : title,
+            note: note.isEmpty ? nil : note,
+            feeling: feeling
+        )
 
-            // Let a new badge land visibly before the sheet closes.
-            if newAchievements.isEmpty {
-                onDismiss(true)
-                dismiss()
-            } else {
-                try? await Task.sleep(for: .seconds(1.6))
-                onDismiss(true)
-                dismiss()
-            }
+        newAchievements = AchievementEngine.evaluate(context: context, triggeredBy: activity)
+
+        let capturedFinished = finished
+        let capturedUnits = settings.units
+        let capturedHealth = health
+        Task {
+            await store.syncWithHealth(
+                activity,
+                finished: capturedFinished,
+                units: capturedUnits,
+                health: capturedHealth
+            )
+        }
+
+        isSaving = false
+
+        guard !newAchievements.isEmpty else {
+            onDismiss(true)
+            dismiss()
+            return
+        }
+
+        // A newly earned badge is worth a beat on screen — but a short one, and
+        // it is the only thing now standing between the tap and the dismissal.
+        Task {
+            try? await Task.sleep(for: .seconds(1.2))
+            onDismiss(true)
+            dismiss()
         }
     }
 }

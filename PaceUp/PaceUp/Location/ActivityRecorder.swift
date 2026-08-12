@@ -113,6 +113,7 @@ final class ActivityRecorder {
     private var ticker: Timer?
     private var lastAcceptedPoint: RoutePoint?
     private var slowSince: Date?
+    private var pointsSinceElevationUpdate = 0
     private var splitUnitDistance: Double = 1000
     private var distanceAtLastSplit: Double = 0
     private var elapsedAtLastSplit: TimeInterval = 0
@@ -205,6 +206,7 @@ final class ActivityRecorder {
         completedSplits = []
         lastAcceptedPoint = nil
         slowSince = nil
+        pointsSinceElevationUpdate = 0
         distanceAtLastSplit = 0
         elapsedAtLastSplit = 0
         altitudeAtLastSplit = 0
@@ -428,9 +430,19 @@ final class ActivityRecorder {
             emitSplitsIfNeeded()
         }
 
-        let elevation = RouteMath.elevationChange(of: points)
-        elevationGain = elevation.gain
-        elevationLoss = elevation.loss
+        // Elevation is recomputed over the whole trace, which is O(n). Doing
+        // that on every fix makes the cost of a run quadratic in its length and
+        // leaves the live screen visibly sluggish in the last kilometres.
+        // Throttling to every eighth accepted point is imperceptible — ascent
+        // moves by centimetres between fixes — and `finish()` recomputes from
+        // the full trace anyway.
+        pointsSinceElevationUpdate += 1
+        if pointsSinceElevationUpdate >= 8 {
+            pointsSinceElevationUpdate = 0
+            let elevation = RouteMath.elevationChange(of: points)
+            elevationGain = elevation.gain
+            elevationLoss = elevation.loss
+        }
     }
 
     /// Decides whether a fix is trustworthy enough to extend the route.
