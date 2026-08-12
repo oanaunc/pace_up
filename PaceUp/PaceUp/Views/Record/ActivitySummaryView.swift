@@ -20,7 +20,6 @@ struct ActivitySummaryView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(HealthKitManager.self) private var health
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
 
     @State private var title: String = ""
     @State private var note: String = ""
@@ -72,7 +71,6 @@ struct ActivitySummaryView: View {
             ) {
                 Button(String(localized: "Discard"), role: .destructive) {
                     onDismiss(false)
-                    dismiss()
                 }
                 Button(String(localized: "Cancel"), role: .cancel) {}
             } message: {
@@ -231,6 +229,7 @@ struct ActivitySummaryView: View {
             .foregroundStyle(.paceTextPrimary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
+            .contentShape(.rect)
             .paceGlassControl(cornerRadius: 24)
         }
         .padding(.horizontal, PaceSpacing.l)
@@ -284,7 +283,6 @@ struct ActivitySummaryView: View {
 
         guard !newAchievements.isEmpty else {
             onDismiss(true)
-            dismiss()
             return
         }
 
@@ -293,7 +291,6 @@ struct ActivitySummaryView: View {
         Task {
             try? await Task.sleep(for: .seconds(1.2))
             onDismiss(true)
-            dismiss()
         }
     }
 }

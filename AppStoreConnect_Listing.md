@@ -209,7 +209,7 @@ Screenshot 7 is worth including even though settings screens are usually dull �
 - [ ] App Group `group.com.oanarinaldi.paceup` created and ticked on **both** targets
 - [ ] HealthKit capability on the app target, **Clinical Health Records unticked**
 - [ ] Background Modes → Location updates ticked
-- [ ] Version `1.0`, Build `2` — bump the build for **every** upload, including TestFlight; App Store Connect rejects a duplicate. Keep version at `1.0` until the app is actually released.
+- [ ] Version `1.0`, Build `3` — bump the build for **every** upload, including TestFlight; App Store Connect rejects a duplicate. Keep version at `1.0` until the app is actually released.
 - [ ] Archive → Distribute App → App Store Connect → Upload
 - [ ] Test on a real device first — HealthKit and Core Motion return nothing in the simulator
 

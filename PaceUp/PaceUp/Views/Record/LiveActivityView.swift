@@ -17,8 +17,6 @@ struct LiveActivityView: View {
 
     @State private var camera: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var isLocked = false
-    @State private var showsSummary = false
-    @State private var finished: FinishedActivity?
     @State private var showsDiscardConfirmation = false
     @State private var followTrigger = 0
     @State private var mapStyle: PaceMapStyle = .standard
@@ -51,14 +49,9 @@ struct LiveActivityView: View {
             }
         }
         .statusBarHidden(false)
-        .fullScreenCover(item: $finished) { activity in
-            ActivitySummaryView(finished: activity) { didSave in
-                finished = nil
-                // Either way the live recording is over. `completeSave` clears
-                // the journal; `discard` does the same and drops the run.
-                if didSave { recorder.completeSave() } else { recorder.discard() }
-            }
-        }
+        // No presentation here. Tapping Finish hands the run to
+        // `recorder.pendingSummary`, and `RecordingFlowView` — the single
+        // cover that owns this whole flow — swaps this screen for the summary.
         .confirmationDialog(
             String(localized: "Discard this activity?"),
             isPresented: $showsDiscardConfirmation,
@@ -228,6 +221,10 @@ struct LiveActivityView: View {
                         .foregroundStyle(Color.paceRed)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
+                        // Without this only the glyphs are tappable — the empty
+                        // space either side of the word is not part of the
+                        // label's hit region.
+                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .paceGlassControl(cornerRadius: 26)
@@ -245,8 +242,7 @@ struct LiveActivityView: View {
     }
 
     private func finishActivity() {
-        guard let result = recorder.finish() else { return }
-        finished = result
+        recorder.finish()
     }
 
     // MARK: Lock

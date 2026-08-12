@@ -23,14 +23,15 @@ struct RootTabView: View {
 
     @State private var selection: AppTab = .today
     @State private var recoveryCandidate: RecoverableSession?
-    @State private var pendingRecovered: FinishedActivity?
 
-    /// Read-only: the cover is driven entirely by the recorder's state, and
-    /// `.saving` is included so the cover does not tear itself down — taking the
-    /// summary sheet with it — the moment the user taps Finish.
-    private var isRecordingBinding: Binding<Bool> {
+    /// One presentation covers the entire record-and-save flow.
+    ///
+    /// It stays up from the moment recording starts until the summary is either
+    /// saved or dismissed. `RecordingFlowView` decides which screen to show
+    /// inside it, so there is never a cover presented from within a cover.
+    private var isSessionActive: Binding<Bool> {
         Binding(
-            get: { [ActivityRecorder.State.recording, .paused, .saving].contains(recorder.state) },
+            get: { recorder.hasActiveSession },
             set: { _ in }
         )
     }
@@ -56,25 +57,17 @@ struct RootTabView: View {
         // A recording in progress takes over the whole screen. Letting the user
         // wander into Settings mid-run and lose the pause button would be a
         // worse trade than a modal.
-        .fullScreenCover(isPresented: isRecordingBinding) {
-            LiveActivityView()
+        .fullScreenCover(isPresented: isSessionActive) {
+            RecordingFlowView()
         }
         .sheet(item: $recoveryCandidate) { session in
-            RecoverySheet(session: session) { recovered in
+            // Recovering hands the run to `recorder.pendingSummary`, which
+            // brings up the same flow cover as a live finish.
+            RecoverySheet(session: session) {
                 recoveryCandidate = nil
-                if let recovered { pendingRecovered = recovered }
             }
             .presentationDetents([.height(360)])
             .presentationBackground(.regularMaterial)
-        }
-        .sheet(item: $pendingRecovered) { finished in
-            ActivitySummaryView(finished: finished) { didSave in
-                pendingRecovered = nil
-                // Only clear the journal once the recovered run is safely in
-                // the database. If the user backed out, leave it on disk so the
-                // next launch offers it again.
-                if didSave { recorder.completeSave() }
-            }
         }
         .onChange(of: recorder.recoverableSession) { _, session in
             recoveryCandidate = session
@@ -89,7 +82,7 @@ struct RootTabView: View {
 struct RecoverySheet: View {
 
     var session: RecoverableSession
-    var completion: (FinishedActivity?) -> Void
+    var completion: () -> Void
 
     @Environment(ActivityRecorder.self) private var recorder
     @Environment(AppSettings.self) private var settings
@@ -124,11 +117,12 @@ struct RecoverySheet: View {
 
             VStack(spacing: PaceSpacing.s) {
                 PrimaryButton(title: String(localized: "Recover Activity")) {
-                    completion(recorder.recover(session, units: settings.units))
+                    recorder.recover(session, units: settings.units)
+                    completion()
                 }
                 Button(String(localized: "Discard")) {
                     recorder.dismissRecovery()
-                    completion(nil)
+                    completion()
                 }
                 .font(.subheadline)
                 .foregroundStyle(.paceTextSecondary)

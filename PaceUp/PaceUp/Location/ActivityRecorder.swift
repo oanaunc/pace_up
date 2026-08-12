@@ -98,6 +98,17 @@ final class ActivityRecorder {
     /// Set when a previous run was found on disk at launch.
     var recoverableSession: RecoverableSession?
 
+    /// A run that has stopped recording and is waiting for the user to save or
+    /// discard it.
+    ///
+    /// This lives on the recorder rather than in the live screen's `@State` so
+    /// that a single presentation can swap between the live UI and the summary.
+    /// Presenting the summary as a `fullScreenCover` *from inside* the live
+    /// cover meant two nested presentations being updated in the same
+    /// transaction, and SwiftUI drops the inner one often enough that Finish
+    /// looked like it did nothing at all.
+    private(set) var pendingSummary: FinishedActivity?
+
     // MARK: Private
 
     private let provider = LocationProvider()
@@ -244,8 +255,9 @@ final class ActivityRecorder {
         state = .recording
     }
 
-    /// Stops recording and returns an unsaved snapshot for the summary screen.
+    /// Stops recording and hands an unsaved snapshot to `pendingSummary`.
     /// Nothing is written to SwiftData until the user taps Save Activity.
+    @discardableResult
     func finish() -> FinishedActivity? {
         guard let startDate, state == .recording || state == .paused else { return nil }
 
@@ -280,7 +292,7 @@ final class ActivityRecorder {
             ))
         }
 
-        return FinishedActivity(
+        let result = FinishedActivity(
             sessionID: sessionID,
             type: activityType,
             startDate: startDate,
@@ -296,6 +308,27 @@ final class ActivityRecorder {
             heartRates: heartRates,
             splits: splits
         )
+        pendingSummary = result
+        return result
+    }
+
+    /// True while either a recording or an unsaved summary is on screen.
+    var hasActiveSession: Bool {
+        state == .recording || state == .paused || pendingSummary != nil
+    }
+
+    /// The user backed out of the summary without saving.
+    func cancelPendingSummary() {
+        let wasRecovered = pendingSummary?.wasRecovered ?? false
+        pendingSummary = nil
+
+        if wasRecovered {
+            // A recovered run that was not saved stays on disk, so the next
+            // launch offers it again. Only an explicit Discard removes it.
+            reset()
+        } else {
+            discard()
+        }
     }
 
     /// Abandons the current recording without saving.
@@ -307,12 +340,14 @@ final class ActivityRecorder {
 
     /// Called after the summary screen has persisted the activity.
     func completeSave() {
+        pendingSummary = nil
         RecordingJournal.shared.finish()
         reset()
     }
 
     private func reset() {
         state = .idle
+        pendingSummary = nil
         startDate = nil
         pauseStartedAt = nil
         accumulatedPause = 0
@@ -366,7 +401,7 @@ final class ActivityRecorder {
         splitUnitDistance = units.splitDistance
         recoverableSession = nil
 
-        return FinishedActivity(
+        let result = FinishedActivity(
             sessionID: session.header.sessionID,
             type: session.header.activityType,
             startDate: session.header.startDate,
@@ -386,6 +421,12 @@ final class ActivityRecorder {
             splits: RouteMath.splits(from: session.points, unitDistance: splitUnitDistance),
             wasRecovered: true
         )
+
+        // Route it through the same presentation channel as a live finish, so
+        // there is exactly one place that shows a summary.
+        state = .saving
+        pendingSummary = result
+        return result
     }
 
     func dismissRecovery() {

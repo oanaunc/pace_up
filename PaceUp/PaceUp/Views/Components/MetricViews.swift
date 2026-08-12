@@ -183,6 +183,7 @@ struct PrimaryButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(tint.opacity(isEnabled ? 1 : 0.35), in: .capsule)
+            .contentShape(.capsule)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
@@ -206,6 +207,7 @@ struct SecondaryButton: View {
             .foregroundStyle(role == .destructive ? Color.paceRed : Color.paceTextPrimary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
+            .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .paceGlassControl(cornerRadius: 26)
