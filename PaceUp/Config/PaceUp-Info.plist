@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Pace Up</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+
+	<!-- Scene manifest: SwiftUI lifecycle, no storyboard. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>BrandInk</string>
+	</dict>
+
+	<!-- Portrait only: every screen in the design is portrait, and a rotating
+	     live-run map is a distraction rather than a feature. -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+
+	<!-- Background location is what lets a run keep recording with the screen
+	     off. App Review will look for a purpose string that matches this. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Pace Up uses your location to record the route, distance and pace of your walks, runs and hikes. Tracking only happens while an activity is running.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Pace Up keeps recording your route while an activity is running and your phone is in your pocket or the screen is off.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Pace Up reads step and motion data to count your steps during an activity.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Pace Up reads steps, walking and running distance, workouts, heart rate and active energy from Apple Health so your daily totals match the Health app.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Pace Up saves your finished activities as workouts in Apple Health, so your history stays with you even if you remove Pace Up.</string>
+
+	<!-- Temporary precise-location request made when a user has granted only
+	     approximate location. Approximate location cannot produce a route. -->
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>PreciseLocationForRouteTracking</key>
+		<string>Pace Up needs precise location to draw an accurate route and measure your distance.</string>
+	</dict>
+
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.paceup.backup</string>
+			<key>UTTypeDescription</key>
+			<string>Pace Up Backup</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>json</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>
