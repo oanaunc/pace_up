@@ -68,8 +68,12 @@ struct RootTabView: View {
             .presentationBackground(.regularMaterial)
         }
         .sheet(item: $pendingRecovered) { finished in
-            ActivitySummaryView(finished: finished) {
+            ActivitySummaryView(finished: finished) { didSave in
                 pendingRecovered = nil
+                // Only clear the journal once the recovered run is safely in
+                // the database. If the user backed out, leave it on disk so the
+                // next launch offers it again.
+                if didSave { recorder.completeSave() }
             }
         }
         .onChange(of: recorder.recoverableSession) { _, session in
@@ -120,7 +124,7 @@ struct RecoverySheet: View {
 
             VStack(spacing: PaceSpacing.s) {
                 PrimaryButton(title: String(localized: "Recover Activity")) {
-                    completion(recorder.recover(session))
+                    completion(recorder.recover(session, units: settings.units))
                 }
                 Button(String(localized: "Discard")) {
                     recorder.dismissRecovery()

@@ -163,9 +163,15 @@ final class Activity {
     }
 
     /// Fastest complete split, used for the "best pace" readout.
-    var bestSplitPaceSecondsPerKm: Double? {
-        let complete = splits.filter { $0.distance > 900 }
-        return complete.map(\.paceSecondsPerKm).filter { $0 > 0 }.min()
+    ///
+    /// The trailing partial split is excluded. A 950 m final split run hard
+    /// would otherwise be reported as the fastest kilometre of the activity.
+    func bestSplitPaceSecondsPerKm(unitDistance: Double) -> Double? {
+        splits
+            .filter { !$0.isPartial(unitDistance: unitDistance) }
+            .map(\.paceSecondsPerKm)
+            .filter { $0 > 0 }
+            .min()
     }
 
     var thumbnailCoordinates: [CLLocationCoordinate2D] {
@@ -212,6 +218,19 @@ final class Activity {
         maxLatitude = latitudes.max()
         minLongitude = longitudes.min()
         maxLongitude = longitudes.max()
+    }
+
+    /// Recomputes the cached bounding box from whatever route data is present.
+    /// Used on import, where the box is not carried in the backup file.
+    func refreshBoundingBox() {
+        let points = RouteCodec.decode(detail?.routeData).isEmpty
+            ? RouteCodec.decode(thumbnailRoute)
+            : RouteCodec.decode(detail?.routeData)
+        guard !points.isEmpty else { return }
+        minLatitude = points.map(\.latitude).min()
+        maxLatitude = points.map(\.latitude).max()
+        minLongitude = points.map(\.longitude).min()
+        maxLongitude = points.map(\.longitude).max()
     }
 
     /// Removes the heavy payload while leaving every permanent field intact.

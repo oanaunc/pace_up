@@ -59,8 +59,11 @@ enum PaceFormat {
     /// Input is always seconds per kilometre; conversion to per-mile happens
     /// here so callers never have to remember which unit they hold.
     static func paceValue(secondsPerKm: Double, units: MeasurementUnits) -> String {
-        guard secondsPerKm.isFinite, secondsPerKm > 0, secondsPerKm < 7200 else { return "--:--" }
+        guard secondsPerKm.isFinite, secondsPerKm > 0 else { return "--:--" }
         let converted = units == .metric ? secondsPerKm : secondsPerKm * 1.609344
+        // Bound the *displayed* value. Checking before conversion let a slow
+        // hike render as "193:03" per mile instead of falling back to "--:--".
+        guard converted < 7200 else { return "--:--" }
         let total = Int(converted.rounded())
         return String(format: "%d:%02d", total / 60, total % 60)
     }

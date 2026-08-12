@@ -48,9 +48,25 @@ extension Color {
     static let paceTextTertiary = Color.white.opacity(0.38)
 }
 
+/// `foregroundStyle(_:)` and friends are generic over `ShapeStyle`, so a
+/// leading-dot reference resolves against `ShapeStyle`, not `Color`. Without
+/// these shims, `.foregroundStyle(.paceTextSecondary)` does not compile.
 extension ShapeStyle where Self == Color {
     static var paceLime: Color { .paceLime }
+    static var paceLimeBright: Color { .paceLimeBright }
+    static var paceInk: Color { .paceInk }
+    static var paceSurface: Color { .paceSurface }
+    static var paceSurfaceRaised: Color { .paceSurfaceRaised }
+    static var paceHairline: Color { .paceHairline }
+    static var paceOrange: Color { .paceOrange }
+    static var paceRed: Color { .paceRed }
+    static var paceMint: Color { .paceMint }
+    static var paceCyan: Color { .paceCyan }
+    static var paceViolet: Color { .paceViolet }
+    static var paceAmber: Color { .paceAmber }
+    static var paceTextPrimary: Color { .paceTextPrimary }
     static var paceTextSecondary: Color { .paceTextSecondary }
+    static var paceTextTertiary: Color { .paceTextTertiary }
 }
 
 /// Gradient used for the route polyline: lime at the start, warming to orange

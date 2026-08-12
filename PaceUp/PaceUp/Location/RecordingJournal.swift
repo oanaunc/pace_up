@@ -33,7 +33,14 @@ struct JournalHeader: Codable, Equatable, Sendable {
     struct PausedInterval: Codable, Equatable, Sendable {
         var start: Date
         var end: Date?
-        var duration: TimeInterval { (end ?? .now).timeIntervalSince(start) }
+
+        /// An interval left open by a termination must be closed against the
+        /// journal's last write, not against the moment of recovery. Measuring
+        /// against `.now` makes an overnight relaunch report a thirteen-hour
+        /// pause and a zero-length run.
+        func duration(closingAt fallback: Date) -> TimeInterval {
+            max(0, (end ?? fallback).timeIntervalSince(start))
+        }
     }
 
     var activityType: ActivityType {
@@ -41,7 +48,7 @@ struct JournalHeader: Codable, Equatable, Sendable {
     }
 
     var totalPausedDuration: TimeInterval {
-        pausedIntervals.reduce(0) { $0 + $1.duration }
+        pausedIntervals.reduce(0) { $0 + $1.duration(closingAt: lastUpdate) }
     }
 }
 

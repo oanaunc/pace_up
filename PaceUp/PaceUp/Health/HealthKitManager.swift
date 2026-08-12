@@ -172,8 +172,13 @@ final class HealthKitManager {
     func refreshWeeklySteps() async {
         guard isAvailable else { return }
         let calendar = Calendar.current
-        let end = calendar.startOfDay(for: .now).addingTimeInterval(86_400)
-        guard let start = calendar.date(byAdding: .day, value: -6, to: calendar.startOfDay(for: .now)) else { return }
+        let today = calendar.startOfDay(for: .now)
+        // Not `+86_400`: a DST transition makes a 23- or 25-hour day, which
+        // would truncate or overlap the final bucket.
+        guard
+            let end = calendar.date(byAdding: .day, value: 1, to: today),
+            let start = calendar.date(byAdding: .day, value: -6, to: today)
+        else { return }
 
         var results: [DailyMetric] = []
         var cursor = start

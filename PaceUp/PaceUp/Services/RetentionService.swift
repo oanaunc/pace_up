@@ -89,6 +89,14 @@ struct RetentionService {
         }
 
         for activity in candidates {
+            // Nulling a to-one relationship does not delete the destination
+            // object — the cascade rule only fires when the *Activity* is
+            // deleted. Without this explicit delete the ActivityDetail rows are
+            // orphaned, keep their GPS blobs forever, and the cleanup frees
+            // exactly zero bytes while reporting success.
+            if let detail = activity.detail {
+                context.delete(detail)
+            }
             activity.purgeDetail(on: now)
         }
         try? context.save()

@@ -232,6 +232,7 @@ struct ImportService {
                 activity.isDetailPurged = false
             }
 
+            activity.refreshBoundingBox()
             context.insert(activity)
             imported += 1
         }

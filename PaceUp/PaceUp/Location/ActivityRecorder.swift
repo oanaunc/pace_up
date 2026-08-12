@@ -257,11 +257,26 @@ final class ActivityRecorder {
         let elapsedTotal = end.timeIntervalSince(startDate)
         let moving = max(0, elapsedTotal - accumulatedPause)
 
-        // Recompute from the full trace rather than trusting the running
-        // totals, so a saved activity always agrees with its own route.
+        // Distance and elevation are recomputed from the full trace so a saved
+        // activity always agrees with its own route.
         let finalDistance = RouteMath.distance(of: points)
         let elevation = RouteMath.elevationChange(of: points)
-        let splits = RouteMath.splits(from: points, unitDistance: splitUnitDistance)
+
+        // Splits, however, come from the live tally rather than from
+        // `RouteMath.splits`. A RoutePoint's `elapsed` is wall-clock, so the
+        // first point after a resume carries the whole pause with it, and a
+        // recomputed split containing a five-minute traffic light would read
+        // 10:00/km. `completedSplits` is accumulated against `movingDuration`.
+        var splits = completedSplits
+        let remainder = distance - distanceAtLastSplit
+        if remainder > 20 {
+            splits.append(Split(
+                index: splits.count + 1,
+                distance: remainder,
+                duration: max(0, moving - elapsedAtLastSplit),
+                elevationDelta: (points.last?.altitude ?? altitudeAtLastSplit) - altitudeAtLastSplit
+            ))
+        }
 
         return FinishedActivity(
             sessionID: sessionID,
@@ -333,13 +348,20 @@ final class ActivityRecorder {
     }
 
     /// Turns a recovered journal into a finished activity the user can save.
-    func recover(_ session: RecoverableSession) -> FinishedActivity {
+    ///
+    /// The journal is deliberately *not* deleted here. It is discarded only
+    /// once the activity has actually been written, via `completeSave()`. If
+    /// the user swipes the summary away, or the app dies again while it is on
+    /// screen, the run is still on disk and is re-offered on the next launch.
+    func recover(_ session: RecoverableSession, units: MeasurementUnits) -> FinishedActivity {
         let elevation = RouteMath.elevationChange(of: session.points)
         let end = session.header.lastUpdate
         let elapsedTotal = end.timeIntervalSince(session.header.startDate)
         let moving = max(0, elapsedTotal - session.header.totalPausedDuration)
 
-        RecordingJournal.discard()
+        // Split length comes from current preferences: after a relaunch the
+        // recorder's own `splitUnitDistance` is still at its 1 km default.
+        splitUnitDistance = units.splitDistance
         recoverableSession = nil
 
         return FinishedActivity(
@@ -356,6 +378,9 @@ final class ActivityRecorder {
             elevationLoss: elevation.loss,
             points: session.points,
             heartRates: [],
+            // No live tally survives a termination, so these are recomputed
+            // from wall-clock point times and will absorb any pause that
+            // happened mid-split. Acceptable for a best-effort recovery.
             splits: RouteMath.splits(from: session.points, unitDistance: splitUnitDistance),
             wasRecovered: true
         )
@@ -377,6 +402,14 @@ final class ActivityRecorder {
         if state == .acquiring, signalQuality >= .fair {
             state = .ready
         }
+
+        // Auto-pause is evaluated *before* the recording guard. Doing it inside
+        // the point loop below would make it a one-way trap: once auto-pause
+        // sets `state = .paused`, the guard rejects every later update and the
+        // auto-resume branch becomes unreachable, silently truncating the rest
+        // of the run.
+        evaluateAutoPause(speed: latest.speed)
+
         guard state == .recording, let startDate else { return }
 
         for location in locations {
@@ -392,7 +425,6 @@ final class ActivityRecorder {
 
             RecordingJournal.shared.append(point)
 
-            evaluateAutoPause(speed: location.speed)
             emitSplitsIfNeeded()
         }
 
@@ -421,8 +453,11 @@ final class ActivityRecorder {
         guard step >= minimumDisplacement else { return false }
 
         // Teleports: a jump that implies an impossible speed is a bad fix.
+        // Two fixes sharing a timestamp are rejected outright rather than
+        // skipping the check, which would let a jump of any size through.
         let interval = candidate.elapsed - previous.elapsed
-        if interval > 0, step / interval > maximumPlausibleSpeed { return false }
+        guard interval > 0 else { return false }
+        if step / interval > maximumPlausibleSpeed { return false }
 
         return true
     }
@@ -442,6 +477,9 @@ final class ActivityRecorder {
     private func evaluateAutoPause(speed: CLLocationSpeed) {
         guard AppSettings.shared.autoPauseEnabled, activityType != .cycle else { return }
         guard speed >= 0 else { return }
+        // Only act while recording, or while *we* are the reason it is paused.
+        // A user-initiated pause must never be undone by movement.
+        guard state == .recording || (state == .paused && isAutoPaused) else { return }
 
         if speed < autoPauseSpeed {
             if let since = slowSince {
@@ -572,7 +610,8 @@ final class ActivityRecorder {
         let interval = points[points.count - 1].elapsed - points[index].elapsed
         guard interval > 0 else { return averagePaceSecondsPerKm }
         let pace = interval / (covered / 1000)
-        return pace > 120 && pace < 3600 ? pace : averagePaceSecondsPerKm
+        let floorPace: Double = activityType == .cycle ? 45 : 120
+        return pace > floorPace && pace < 3600 ? pace : averagePaceSecondsPerKm
     }
 }
 

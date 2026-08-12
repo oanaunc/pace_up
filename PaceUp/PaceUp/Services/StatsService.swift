@@ -161,7 +161,7 @@ struct StatsService {
 
         // Fastest 1K: best single complete split across all runs.
         if let best = runs.compactMap({ activity -> (Double, Activity)? in
-            guard let pace = activity.bestSplitPaceSecondsPerKm else { return nil }
+            guard let pace = activity.bestSplitPaceSecondsPerKm(unitDistance: units.splitDistance) else { return nil }
             return (pace, activity)
         }).min(by: { $0.0 < $1.0 }) {
             records.append(PersonalRecord(
@@ -174,7 +174,7 @@ struct StatsService {
 
         // Fastest 5K and 10K: best rolling window across a run's splits.
         for (kind, target) in [(PersonalRecord.Kind.fastest5K, 5.0), (.fastest10K, 10.0)] {
-            if let best = bestWindow(kilometres: target, in: runs) {
+            if let best = bestWindow(kilometres: target, in: runs, units: units) {
                 records.append(PersonalRecord(
                     kind: kind,
                     formattedValue: PaceFormat.duration(best.duration),
@@ -202,12 +202,19 @@ struct StatsService {
             ))
         }
 
-        if let mostSteps = activities.max(by: { $0.steps < $1.steps }), mostSteps.steps > 0 {
+        // Steps per *day*, summed across every activity that day. Taking the
+        // single largest activity would under-report anyone who splits their
+        // walking into a morning and an evening.
+        let stepsByDay = Dictionary(grouping: activities) {
+            Calendar.current.startOfDay(for: $0.startDate)
+        }.mapValues { $0.reduce(0) { $0 + $1.steps } }
+
+        if let best = stepsByDay.max(by: { $0.value < $1.value }), best.value > 0 {
             records.append(PersonalRecord(
                 kind: .mostStepsInADay,
-                formattedValue: PaceFormat.steps(mostSteps.steps),
-                achievedOn: mostSteps.startDate,
-                activityID: mostSteps.id
+                formattedValue: PaceFormat.steps(best.value),
+                achievedOn: best.key,
+                activityID: nil
             ))
         }
 
@@ -237,13 +244,26 @@ struct StatsService {
     }
 
     /// Fastest contiguous `kilometres` inside any single activity's splits.
-    private func bestWindow(kilometres: Double, in activities: [Activity]) -> (duration: TimeInterval, activity: Activity)? {
+    ///
+    /// Two things this must not get wrong. First, the trailing partial split is
+    /// excluded: counting a 950 m final split as a kilometre yields a "fastest
+    /// 5K" the user never ran. Second, a split is one *unit*, not one
+    /// kilometre — five splits for an imperial user is 8.05 km, so the window
+    /// length is derived from the current unit and the record is skipped when
+    /// the target does not land on a whole number of splits.
+    private func bestWindow(kilometres: Double,
+                            in activities: [Activity],
+                            units: MeasurementUnits) -> (duration: TimeInterval, activity: Activity)? {
         var best: (TimeInterval, Activity)?
 
+        let unitDistance = units.splitDistance
+        let exactWindow = kilometres * 1000 / unitDistance
+        let window = Int(exactWindow.rounded())
+        guard window > 0, abs(exactWindow - Double(window)) < 0.02 else { return nil }
+
         for activity in activities {
-            let splits = activity.splits.filter { $0.distance > 900 }
-            let window = Int(kilometres)
-            guard splits.count >= window, window > 0 else { continue }
+            let splits = activity.splits.filter { !$0.isPartial(unitDistance: unitDistance) }
+            guard splits.count >= window else { continue }
 
             for start in 0...(splits.count - window) {
                 let slice = splits[start..<(start + window)]

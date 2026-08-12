@@ -25,14 +25,16 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
             }
 
-            Section(String(localized: "Recording")) {
+            Section {
                 Toggle(String(localized: "Auto-pause"), isOn: $settings.autoPauseEnabled)
                 Toggle(String(localized: "Keep screen awake"), isOn: $settings.keepScreenAwake)
+            } header: {
+                Text("Recording")
             } footer: {
                 Text("Auto-pause stops the timer when you stop moving and resumes when you set off again.")
             }
 
-            Section(String(localized: "Apple Health")) {
+            Section {
                 HStack {
                     Text("Status")
                     Spacer()
@@ -49,6 +51,8 @@ struct SettingsView: View {
                         UIApplication.shared.open(url)
                     }
                 }
+            } header: {
+                Text("Apple Health")
             } footer: {
                 Text("iOS never tells an app which Health permissions were granted. If your steps look wrong, check Pace Up's access in the Health app under Sharing.")
             }
@@ -74,7 +78,7 @@ struct SettingsView: View {
                 }
             }
 
-            Section(String(localized: "About")) {
+            Section {
                 HStack {
                     Text("Version")
                     Spacer()
@@ -87,6 +91,8 @@ struct SettingsView: View {
                     Text("Apple MapKit")
                         .foregroundStyle(.paceTextSecondary)
                 }
+            } header: {
+                Text("About")
             } footer: {
                 Text("Pace Up has no account, no server and no analytics. Routes are recorded on your device and drawn over Apple Maps.")
             }

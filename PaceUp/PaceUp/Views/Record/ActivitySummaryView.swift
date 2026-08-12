@@ -12,7 +12,10 @@ import SwiftData
 struct ActivitySummaryView: View {
 
     var finished: FinishedActivity
-    var onDismiss: () -> Void
+    /// `true` when the activity was written, `false` when the user backed out.
+    /// The caller needs the distinction: a recovered run must stay on disk if
+    /// it was not saved.
+    var onDismiss: (Bool) -> Void
 
     @Environment(AppSettings.self) private var settings
     @Environment(HealthKitManager.self) private var health
@@ -68,7 +71,7 @@ struct ActivitySummaryView: View {
                 titleVisibility: .visible
             ) {
                 Button(String(localized: "Discard"), role: .destructive) {
-                    onDismiss()
+                    onDismiss(false)
                     dismiss()
                 }
                 Button(String(localized: "Cancel"), role: .cancel) {}
@@ -254,11 +257,11 @@ struct ActivitySummaryView: View {
 
             // Let a new badge land visibly before the sheet closes.
             if newAchievements.isEmpty {
-                onDismiss()
+                onDismiss(true)
                 dismiss()
             } else {
                 try? await Task.sleep(for: .seconds(1.6))
-                onDismiss()
+                onDismiss(true)
                 dismiss()
             }
         }

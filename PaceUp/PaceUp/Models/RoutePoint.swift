@@ -125,7 +125,12 @@ enum RouteCodec {
         guard let data, data.count >= headerStride else { return 0 }
         let bytes = [UInt8](data)
         guard Array(bytes[0..<4]) == magic else { return 0 }
-        return Int(UInt32(littleEndian: bytes.readUInt32(at: 4)))
+        // Clamp to what is actually present, matching `decode`. A truncated
+        // blob would otherwise make `hasFullRoute` claim a route that decodes
+        // to nothing, and the detail screen would show an empty map instead of
+        // the purged state.
+        let declared = Int(UInt32(littleEndian: bytes.readUInt32(at: 4)))
+        return min(declared, (bytes.count - headerStride) / pointStride)
     }
 
     // MARK: Simplification

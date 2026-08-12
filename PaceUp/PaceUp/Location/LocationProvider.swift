@@ -75,22 +75,25 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
 
     // MARK: CLLocationManagerDelegate
 
+    // Core Location delivers these on the queue the manager was created on,
+    // which is the main queue here. `assumeIsolated` therefore holds, and it
+    // matters: hopping via an unstructured `Task` gives no ordering guarantee
+    // and could deliver GPS batches out of sequence — the same failure the
+    // recording journal's serial queue exists to avoid.
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let handler = onLocations
-        Task { @MainActor in handler?(locations) }
+        MainActor.assumeIsolated { onLocations?(locations) }
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let handler = onAuthorizationChange
         let status = manager.authorizationStatus
         let accuracy = manager.accuracyAuthorization
-        Task { @MainActor in handler?(status, accuracy) }
+        MainActor.assumeIsolated { onAuthorizationChange?(status, accuracy) }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         // kCLErrorLocationUnknown is transient — Core Location is still trying.
         if let clError = error as? CLError, clError.code == .locationUnknown { return }
-        let handler = onFailure
-        Task { @MainActor in handler?(error) }
+        MainActor.assumeIsolated { onFailure?(error) }
     }
 }

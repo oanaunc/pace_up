@@ -52,9 +52,11 @@ struct LiveActivityView: View {
         }
         .statusBarHidden(false)
         .fullScreenCover(item: $finished) { activity in
-            ActivitySummaryView(finished: activity) {
+            ActivitySummaryView(finished: activity) { didSave in
                 finished = nil
-                recorder.completeSave()
+                // Either way the live recording is over. `completeSave` clears
+                // the journal; `discard` does the same and drops the run.
+                if didSave { recorder.completeSave() } else { recorder.discard() }
             }
         }
         .confirmationDialog(

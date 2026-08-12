@@ -75,3 +75,11 @@ extension Color {
     static let widgetSecondary = Color.white.opacity(0.62)
     static let widgetTertiary = Color.white.opacity(0.38)
 }
+
+/// Leading-dot lookup in `foregroundStyle(_:)` resolves against `ShapeStyle`.
+extension ShapeStyle where Self == Color {
+    static var widgetLime: Color { .widgetLime }
+    static var widgetInk: Color { .widgetInk }
+    static var widgetSecondary: Color { .widgetSecondary }
+    static var widgetTertiary: Color { .widgetTertiary }
+}

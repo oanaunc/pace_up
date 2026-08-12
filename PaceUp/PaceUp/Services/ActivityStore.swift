@@ -48,7 +48,7 @@ struct ActivityStore {
             activeEnergy: finished.activeEnergy,
             elevationGain: finished.elevationGain,
             elevationLoss: finished.elevationLoss,
-            source: finished.wasRecovered ? .paceUp : .paceUp
+            source: .paceUp
         )
         activity.splitsData = SampleCodec.encodeSplits(finished.splits)
 
@@ -86,10 +86,12 @@ struct ActivityStore {
         activity.healthKitWorkoutUUID = workoutID
 
         try? context.save()
-
-        AchievementEngine.evaluate(context: context, triggeredBy: activity)
         await refreshWidgetSnapshot(health: health, units: units)
 
+        // Achievements are deliberately evaluated by the caller, not here.
+        // Evaluating in both places meant the first pass inserted the unlocks
+        // and the second returned an empty array, so the summary screen's "New
+        // achievement" banner could never appear.
         return activity
     }
 
@@ -163,8 +165,16 @@ struct ActivityStore {
         var inserted = 0
         for workout in workouts where !existingIDs.contains(workout.uuid) {
             let type = ActivityType(hkWorkoutActivityType: workout.workoutActivityType)
-            let distance = workout.statistics(for: PaceUpHealthTypes.walkingRunningDistance)?
-                .sumQuantity()?.doubleValue(for: .meter()) ?? 0
+            // Cycling distance lives under a different quantity type; reading
+            // only walking/running would import every ride as zero kilometres.
+            let distanceType = type == .cycle
+                ? PaceUpHealthTypes.cyclingDistance
+                : PaceUpHealthTypes.walkingRunningDistance
+            let distance = workout.statistics(for: distanceType)?
+                .sumQuantity()?.doubleValue(for: .meter())
+                ?? workout.statistics(for: PaceUpHealthTypes.walkingRunningDistance)?
+                    .sumQuantity()?.doubleValue(for: .meter())
+                ?? 0
             let energy = workout.statistics(for: PaceUpHealthTypes.activeEnergy)?
                 .sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0
 

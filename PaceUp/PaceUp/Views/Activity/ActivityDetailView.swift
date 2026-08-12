@@ -190,7 +190,7 @@ struct ActivityDetailView: View {
                         value: "\(Int(average)) bpm"
                     )
                 }
-                if let best = activity.bestSplitPaceSecondsPerKm {
+                if let best = activity.bestSplitPaceSecondsPerKm(unitDistance: settings.units.splitDistance) {
                     Divider().overlay(Color.paceHairline)
                     MetricRowItem(
                         caption: String(localized: "Best split"),
@@ -266,7 +266,10 @@ struct ActivityDetailView: View {
             VStack(alignment: .leading, spacing: PaceSpacing.l) {
                 chartCard(title: String(localized: "Pace")) {
                     PaceChart(
-                        series: RouteMath.paceSeries(from: routePoints),
+                        series: RouteMath.paceSeries(
+                            from: routePoints,
+                            minimumPaceSecondsPerKm: activity.type == .cycle ? 45 : 120
+                        ),
                         units: settings.units
                     )
                 }

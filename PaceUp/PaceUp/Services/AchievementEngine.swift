@@ -74,15 +74,20 @@ enum AchievementEngine {
         if longest >= 30 { award(.streak30, on: .now) }
 
         // Time of day.
-        if let early = activities.first(where: { calendar.component(.hour, from: $0.endDate) < 7 }) {
+        // `allActivities()` is newest-first, so `first(where:)` would date the
+        // badge to the latest occurrence rather than the one that earned it.
+        if let early = activities.filter({ calendar.component(.hour, from: $0.endDate) < 7 })
+            .min(by: { $0.startDate < $1.startDate }) {
             award(.earlyBird, on: early.endDate, activityID: early.id)
         }
-        if let late = activities.first(where: { calendar.component(.hour, from: $0.endDate) >= 22 }) {
+        if let late = activities.filter({ calendar.component(.hour, from: $0.endDate) >= 22 })
+            .min(by: { $0.startDate < $1.startDate }) {
             award(.nightOwl, on: late.endDate, activityID: late.id)
         }
 
         // Elevation.
-        if let climb = activities.first(where: { $0.elevationGain >= 500 }) {
+        if let climb = activities.filter({ $0.elevationGain >= 500 })
+            .min(by: { $0.startDate < $1.startDate }) {
             award(.elevation500, on: climb.startDate, activityID: climb.id)
         }
 

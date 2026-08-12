@@ -84,7 +84,6 @@ enum RouteMath {
         var accumulated = 0.0
         var splitStartTime = points[0].elapsed
         var splitStartAltitude = points[0].altitude
-        var carried = 0.0
 
         for i in 1..<points.count {
             let segment = haversine(points[i - 1], points[i])
@@ -92,7 +91,7 @@ enum RouteMath {
 
             while accumulated >= unitDistance {
                 let overshoot = accumulated - unitDistance
-                let fraction = segment > 0 ? (segment - overshoot - carried) / segment : 0
+                let fraction = segment > 0 ? (segment - overshoot) / segment : 0
                 let crossingTime = points[i - 1].elapsed
                     + (points[i].elapsed - points[i - 1].elapsed) * max(0, min(1, fraction))
                 let crossingAltitude = points[i - 1].altitude
@@ -109,7 +108,6 @@ enum RouteMath {
                 splitStartTime = crossingTime
                 splitStartAltitude = crossingAltitude
                 accumulated = overshoot
-                carried = 0
             }
         }
 
@@ -150,8 +148,13 @@ enum RouteMath {
 
     /// Rolling pace series for the detail chart: seconds per kilometre sampled
     /// every `windowMeters`.
-    static func paceSeries(from points: [RoutePoint], windowMeters: Double = 200) -> [(distance: Double, paceSecondsPerKm: Double)] {
-        guard points.count > 2 else { return [] }
+    /// `minimumPaceSecondsPerKm` rejects GPS glitches. The default of 120 s/km
+    /// (30 km/h) is right for running but would discard an entire bike ride, so
+    /// callers pass a lower bound when the activity can legitimately be faster.
+    static func paceSeries(from points: [RoutePoint],
+                           windowMeters: Double = 200,
+                           minimumPaceSecondsPerKm: Double = 120) -> [(distance: Double, paceSecondsPerKm: Double)] {
+        guard points.count > 1 else { return [] }
 
         var series = [(Double, Double)]()
         var windowDistance = 0.0
@@ -169,7 +172,7 @@ enum RouteMath {
                     let pace = elapsed / (windowDistance / 1000)
                     // Clamp to something a human could produce; a GPS glitch
                     // otherwise puts a 90 min/km spike in the middle of a chart.
-                    if pace > 120 && pace < 3600 {
+                    if pace > minimumPaceSecondsPerKm && pace < 3600 {
                         series.append((cumulative, pace))
                     }
                 }

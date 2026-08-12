@@ -97,14 +97,12 @@ struct RouteMapView: View {
                 Annotation("", coordinate: start, anchor: .center) {
                     EndpointMarker(color: .paceLimeBright, symbol: "flag.fill")
                 }
-                .annotationTitles(.hidden)
             }
 
             if showsEndpoints, coordinates.count > 1, let end = coordinates.last {
                 Annotation("", coordinate: end, anchor: .center) {
                     EndpointMarker(color: .paceRed, symbol: "flag.checkered")
                 }
-                .annotationTitles(.hidden)
             }
 
             if showsUserLocation {
