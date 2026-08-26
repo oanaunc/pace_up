@@ -61,10 +61,17 @@ struct ConnectHealthView: View {
 
             VStack(spacing: PaceSpacing.m) {
                 if health.isAvailable {
+                    // Guideline 5.1.1(iv): this screen explains *why* Pace Up
+                    // asks for Health data, so its only action must be to show
+                    // the system permission sheet. There is deliberately no
+                    // "Not now" escape — a custom screen may not stand in for
+                    // the system prompt or let the user defer it. Declining
+                    // happens in the sheet itself, where iOS records the
+                    // choice, and the app continues either way.
                     PrimaryButton(
                         title: isRequesting
                             ? String(localized: "Connecting…")
-                            : String(localized: "Connect Apple Health"),
+                            : String(localized: "Continue"),
                         isEnabled: !isRequesting
                     ) {
                         Task {
@@ -74,24 +81,24 @@ struct ConnectHealthView: View {
                             onFinish()
                         }
                     }
+
+                    Text("Pace Up works either way. If you decline, activities are recorded with GPS only, and you can change this later in Settings.")
+                        .font(.caption)
+                        .foregroundStyle(.paceTextTertiary)
+                        .multilineTextAlignment(.center)
                 } else {
-                    // Health data is unavailable on iPad and in some regions.
-                    // Pace Up still works — GPS activities do not need HealthKit.
+                    // Health data is unavailable in some regions and on some
+                    // devices. There is no permission to request, so the button
+                    // simply continues.
                     Text("Health data isn't available on this device. You can still record activities with GPS.")
                         .font(.footnote)
                         .foregroundStyle(.paceTextSecondary)
                         .multilineTextAlignment(.center)
-                }
 
-                Button(String(localized: "Not now")) {
-                    onFinish()
+                    PrimaryButton(title: String(localized: "Continue")) {
+                        onFinish()
+                    }
                 }
-                .font(.subheadline)
-                .foregroundStyle(.paceTextSecondary)
-
-                Text("You can change this later in Settings.")
-                    .font(.caption)
-                    .foregroundStyle(.paceTextTertiary)
             }
             .padding(.horizontal, PaceSpacing.xl)
             .padding(.bottom, 60)
