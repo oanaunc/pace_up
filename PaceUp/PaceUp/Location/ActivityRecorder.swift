@@ -390,6 +390,10 @@ final class ActivityRecorder {
     /// once the activity has actually been written, via `completeSave()`. If
     /// the user swipes the summary away, or the app dies again while it is on
     /// screen, the run is still on disk and is re-offered on the next launch.
+    /// The return value is a convenience for callers that want the activity
+    /// immediately; the summary is presented via `pendingSummary` either way,
+    /// so ignoring it is correct.
+    @discardableResult
     func recover(_ session: RecoverableSession, units: MeasurementUnits) -> FinishedActivity {
         let elevation = RouteMath.elevationChange(of: session.points)
         let end = session.header.lastUpdate

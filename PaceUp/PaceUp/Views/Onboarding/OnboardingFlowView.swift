@@ -112,33 +112,62 @@ struct LogoWordmark: View {
 /// The topographic line motif from the splash comp, drawn rather than shipped
 /// as an image so it scales to any device without extra assets.
 struct ContourBackground: View {
+
+    private static let lineCount = 14
+
+    // Everything below is deliberately annotated as `Double` and the path is
+    // built in a separate function. The original one-expression version mixed
+    // CGFloat and Double across a chain of sin/cos and multiplications, and the
+    // implicit CGFloat↔Double conversions gave the type checker a combinatorial
+    // number of candidate overloads to try — enough that it gave up with
+    // "unable to type-check this expression in reasonable time".
     var body: some View {
         Canvas { context, size in
-            for index in 0..<14 {
-                let progress = Double(index) / 14
-                var path = Path()
-                let amplitude = 26 + progress * 60
-                let yBase = size.height * (0.08 + progress * 0.9)
+            let width = Double(size.width)
+            let height = Double(size.height)
+            guard width > 0 else { return }
 
-                path.move(to: CGPoint(x: -20, y: yBase))
-                var x: CGFloat = -20
-                while x < size.width + 20 {
-                    let y = yBase
-                        + sin((x / size.width) * .pi * 2.4 + progress * 5) * amplitude * 0.35
-                        + cos((x / size.width) * .pi * 1.3 + progress * 2) * amplitude * 0.22
-                    path.addLine(to: CGPoint(x: x, y: y))
-                    x += 6
-                }
+            for index in 0..<Self.lineCount {
+                let progress = Double(index) / Double(Self.lineCount)
+                let amplitude: Double = 26 + progress * 60
+                let yBase: Double = height * (0.08 + progress * 0.9)
+                let opacity: Double = 0.05 + progress * 0.10
+
+                let path = Self.contourPath(
+                    width: width,
+                    yBase: yBase,
+                    amplitude: amplitude,
+                    progress: progress
+                )
 
                 context.stroke(
                     path,
-                    with: .color(.paceLime.opacity(0.05 + progress * 0.10)),
+                    with: .color(.paceLime.opacity(opacity)),
                     lineWidth: 1
                 )
             }
         }
         .blur(radius: 0.3)
         .accessibilityHidden(true)
+    }
+
+    private static func contourPath(width: Double,
+                                    yBase: Double,
+                                    amplitude: Double,
+                                    progress: Double) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: -20, y: yBase))
+
+        var x: Double = -20
+        while x < width + 20 {
+            let phase: Double = x / width
+            let wave: Double = sin(phase * .pi * 2.4 + progress * 5) * amplitude * 0.35
+            let ripple: Double = cos(phase * .pi * 1.3 + progress * 2) * amplitude * 0.22
+            path.addLine(to: CGPoint(x: x, y: yBase + wave + ripple))
+            x += 6
+        }
+
+        return path
     }
 }
 

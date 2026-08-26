@@ -117,7 +117,7 @@ final class RecordingJournal: @unchecked Sendable {
             self.writeHeader(header)
 
             self.handle = try? FileHandle(forWritingTo: Self.pointsURL)
-            try? self.handle?.seekToEnd()
+            _ = try? self.handle?.seekToEnd()
         }
     }
 

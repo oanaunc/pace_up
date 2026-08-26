@@ -88,7 +88,12 @@ final class HealthKitManager {
             case .shouldRequest:
                 authorizationState = .notDetermined
             case .unnecessary:
+                // Every requested type has already been presented to the user.
+                // This does not mean the user granted them — iOS never reveals
+                // read decisions — only that asking again would show nothing.
                 authorizationState = .authorized
+            case .unknown:
+                authorizationState = .unknown
             @unknown default:
                 authorizationState = .unknown
             }
