@@ -97,27 +97,30 @@ struct ActivityTypeCard: View {
     var isSelected: Bool = false
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            Image(type.artworkName)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 132)
-                .clipped()
-            LinearGradient(colors: [.clear, Color.paceInk.opacity(0.92)], startPoint: .center, endPoint: .bottom)
-            HStack(spacing: 7) {
-                Text(type.displayName)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Spacer(minLength: 0)
-                Circle().fill(type.tint).frame(width: 7, height: 7)
+        GeometryReader { geometry in
+            ZStack(alignment: .bottomLeading) {
+                Image(type.artworkName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                LinearGradient(colors: [.clear, Color.paceInk.opacity(0.92)], startPoint: .center, endPoint: .bottom)
+                HStack(spacing: 7) {
+                    Text(type.displayName)
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Spacer(minLength: 0)
+                    Circle().fill(type.tint).frame(width: 7, height: 7)
+                }
+                .padding(12)
             }
-            .padding(12)
+            .clipShape(.rect(cornerRadius: PaceRadius.tile))
+            .overlay { RoundedRectangle(cornerRadius: PaceRadius.tile).strokeBorder(isSelected ? type.tint : Color.white.opacity(0.12), lineWidth: isSelected ? 2 : 1) }
         }
-        .clipShape(.rect(cornerRadius: PaceRadius.tile))
-        .overlay { RoundedRectangle(cornerRadius: PaceRadius.tile).strokeBorder(isSelected ? type.tint : Color.white.opacity(0.12), lineWidth: isSelected ? 2 : 1) }
+        .frame(height: 132)
+        .frame(maxWidth: .infinity)
     }
 }
 

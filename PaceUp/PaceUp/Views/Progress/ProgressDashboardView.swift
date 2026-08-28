@@ -44,6 +44,7 @@ struct ProgressDashboardView: View {
                     streakCard
                     weekCard
                     quickLinks
+                    recentActivitiesSection
                 }
                 .padding(.horizontal, PaceSpacing.l)
                 .padding(.bottom, 100)
@@ -171,6 +172,66 @@ struct ProgressDashboardView: View {
                 LinkRow(symbol: "trophy", title: String(localized: "Personal Records"))
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    private var recentActivitiesSection: some View {
+        VStack(alignment: .leading, spacing: PaceSpacing.m) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("RECENT MOVEMENT")
+                        .font(.caption2.bold())
+                        .tracking(1.4)
+                        .foregroundStyle(.paceLime)
+                    Text("Recent activities")
+                        .font(.title3.bold())
+                }
+
+                Spacer()
+
+                if !activities.isEmpty {
+                    NavigationLink {
+                        ActivityListView()
+                    } label: {
+                        Text("See all")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.paceLime)
+                    }
+                }
+            }
+
+            if activities.isEmpty {
+                HStack(spacing: PaceSpacing.m) {
+                    Image(systemName: "figure.run")
+                        .font(.title2)
+                        .foregroundStyle(.paceLime)
+                        .frame(width: 44, height: 44)
+                        .background(Color.paceLime.opacity(0.12), in: .circle)
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Your movement will appear here")
+                            .font(.subheadline.weight(.semibold))
+                        Text("Complete an activity to connect your progress with the moments behind it.")
+                            .font(.caption)
+                            .foregroundStyle(.paceTextSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(PaceSpacing.l)
+                .paceGlassCard(cornerRadius: PaceRadius.tile)
+            } else {
+                VStack(spacing: PaceSpacing.s) {
+                    ForEach(activities.prefix(3)) { activity in
+                        NavigationLink {
+                            ActivityDetailView(activity: activity)
+                        } label: {
+                            ActivityRow(activity: activity)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
 
