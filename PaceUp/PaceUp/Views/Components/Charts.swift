@@ -22,9 +22,15 @@ struct WeeklyBarChart: View {
     var bars: [Bar]
     var goal: Double
     var tint: Color = .paceLime
+    var usesMomentumGradient = false
 
     private var upperBound: Double {
-        max(goal * 1.05, (bars.map(\.value).max() ?? goal) * 1.15, 1)
+        max(goal * 1.08, (bars.map(\.value).max() ?? goal) * 1.18, 1)
+    }
+
+    private var average: Double {
+        guard !bars.isEmpty else { return 0 }
+        return bars.reduce(0) { $0 + $1.value } / Double(bars.count)
     }
 
     var body: some View {
@@ -33,37 +39,72 @@ struct WeeklyBarChart: View {
                 BarMark(
                     x: .value("Day", bar.label),
                     y: .value("Steps", bar.value),
-                    width: .fixed(18)
+                    width: .ratio(0.58)
                 )
-                .foregroundStyle(bar.isToday ? tint : tint.opacity(0.42))
-                .clipShape(.rect(cornerRadius: 5))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: barColors(for: bar),
+                        startPoint: .top, endPoint: .bottom
+                    )
+                )
+                .clipShape(.rect(topLeadingRadius: 7, topTrailingRadius: 7))
+
+                if bar.isToday {
+                    PointMark(x: .value("Day", bar.label), y: .value("Steps", bar.value))
+                        .foregroundStyle(Color.white)
+                        .symbolSize(28)
+                        .annotation(position: .top) {
+                            Text(PaceFormat.compactCount(Int(bar.value))).font(.caption2.bold()).foregroundStyle(.paceTextPrimary)
+                        }
+                }
             }
+
+            RuleMark(y: .value("Average", average))
+                .lineStyle(StrokeStyle(lineWidth: 1))
+                .foregroundStyle((usesMomentumGradient ? Color.paceAmber : tint).opacity(0.48))
+                .annotation(position: .leading, alignment: .topLeading) {
+                    Text("AVG").font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle((usesMomentumGradient ? Color.paceAmber : tint).opacity(0.82))
+                }
 
             if goal > 0 {
                 RuleMark(y: .value("Goal", goal))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                    .foregroundStyle(Color.white.opacity(0.35))
+                    .foregroundStyle(Color.white.opacity(0.24))
                     .annotation(position: .top, alignment: .trailing) {
-                        Text(PaceFormat.compactCount(Int(goal)))
-                            .font(.caption2)
+                        Text("GOAL \(PaceFormat.compactCount(Int(goal)))")
+                            .font(.system(size: 8, weight: .bold))
+                            .tracking(0.7)
                             .foregroundStyle(.paceTextTertiary)
                     }
             }
         }
         .chartYScale(domain: 0...upperBound)
         .chartYAxis(.hidden)
+        .chartPlotStyle { plot in
+            plot.background(Color.white.opacity(0.025), in: .rect(cornerRadius: 14))
+        }
         .chartXAxis {
             AxisMarks { value in
                 AxisValueLabel {
                     if let label = value.as(String.self) {
                         Text(label)
                             .font(.caption2)
-                            .foregroundStyle(.paceTextSecondary)
+                            .foregroundStyle(.paceTextTertiary)
                     }
                 }
             }
         }
-        .frame(height: 150)
+        .frame(height: 176)
+    }
+
+    private func barColors(for bar: Bar) -> [Color] {
+        guard usesMomentumGradient else {
+            return bar.isToday ? [tint, tint.opacity(0.58)] : [tint.opacity(0.48), tint.opacity(0.16)]
+        }
+        if bar.isToday {
+            return [.paceAmber, .paceOrange, .paceViolet.opacity(0.78)]
+        }
+        return [.paceAmber.opacity(0.50), .paceViolet.opacity(0.34), .paceViolet.opacity(0.12)]
     }
 }
 

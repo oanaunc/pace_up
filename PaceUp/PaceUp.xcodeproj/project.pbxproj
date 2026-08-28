@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		PACEUP000000000000000013 /* PaceUpWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = PACEUP000000000000000009 /* PaceUpWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		WATCH000000000000000013 /* PaceUpWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = WATCH000000000000000009 /* PaceUpWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -17,6 +18,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = PACEUP000000000000000007;
 			remoteInfo = PaceUpWidgets;
+		};
+		WATCH000000000000000012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PACEUP000000000000000005 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = WATCH000000000000000007;
+			remoteInfo = PaceUpWatch;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -32,11 +40,23 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		WATCH00000000000000000D /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				WATCH000000000000000013 /* PaceUpWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		PACEUP000000000000000008 /* PaceUp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaceUp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		PACEUP000000000000000009 /* PaceUpWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PaceUpWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		WATCH000000000000000009 /* PaceUpWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaceUpWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -48,6 +68,11 @@
 		PACEUP000000000000000002 /* PaceUpWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = PaceUpWidgets;
+			sourceTree = "<group>";
+		};
+		WATCH000000000000000002 /* PaceUpWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PaceUpWatch;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -67,6 +92,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		WATCH00000000000000000F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -75,6 +107,7 @@
 			children = (
 				PACEUP000000000000000001 /* PaceUp */,
 				PACEUP000000000000000002 /* PaceUpWidgets */,
+				WATCH000000000000000002 /* PaceUpWatch */,
 				PACEUP000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -84,6 +117,7 @@
 			children = (
 				PACEUP000000000000000008 /* PaceUp.app */,
 				PACEUP000000000000000009 /* PaceUpWidgets.appex */,
+				WATCH000000000000000009 /* PaceUpWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -99,11 +133,13 @@
 				PACEUP00000000000000000B /* Frameworks */,
 				PACEUP00000000000000000C /* Resources */,
 				PACEUP00000000000000000D /* Embed Foundation Extensions */,
+				WATCH00000000000000000D /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				PACEUP000000000000000011 /* PBXTargetDependency */,
+				WATCH000000000000000011 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				PACEUP000000000000000001 /* PaceUp */,
@@ -137,6 +173,28 @@
 			productReference = PACEUP000000000000000009 /* PaceUpWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		WATCH000000000000000007 /* PaceUpWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = WATCH000000000000000016 /* Build configuration list for PBXNativeTarget "PaceUpWatch" */;
+			buildPhases = (
+				WATCH00000000000000000E /* Sources */,
+				WATCH00000000000000000F /* Frameworks */,
+				WATCH000000000000000010 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				WATCH000000000000000002 /* PaceUpWatch */,
+			);
+			name = PaceUpWatch;
+			packageProductDependencies = (
+			);
+			productName = PaceUpWatch;
+			productReference = WATCH000000000000000009 /* PaceUpWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -151,6 +209,9 @@
 						CreatedOnToolsVersion = 26.0;
 					};
 					PACEUP000000000000000007 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					WATCH000000000000000007 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -171,6 +232,7 @@
 			targets = (
 				PACEUP000000000000000006 /* PaceUp */,
 				PACEUP000000000000000007 /* PaceUpWidgets */,
+				WATCH000000000000000007 /* PaceUpWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -184,6 +246,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		PACEUP000000000000000010 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WATCH000000000000000010 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -207,6 +276,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		WATCH00000000000000000E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -214,6 +290,11 @@
 			isa = PBXTargetDependency;
 			target = PACEUP000000000000000007 /* PaceUpWidgets */;
 			targetProxy = PACEUP000000000000000012 /* PBXContainerItemProxy */;
+		};
+		WATCH000000000000000011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = WATCH000000000000000007 /* PaceUpWatch */;
+			targetProxy = WATCH000000000000000012 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -286,7 +367,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Config/PaceUp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = HBD3XXQK45;
 				ENABLE_PREVIEWS = YES;
@@ -312,7 +393,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Config/PaceUp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = HBD3XXQK45;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -335,7 +416,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Config/PaceUpWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = HBD3XXQK45;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Config/PaceUpWidgets-Info.plist";
@@ -359,7 +440,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Config/PaceUpWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = HBD3XXQK45;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Config/PaceUpWidgets-Info.plist";
@@ -375,6 +456,62 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		WATCH00000000000000001D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/PaceUpWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = HBD3XXQK45;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/PaceUpWatch-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Pace Up";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oanarinaldi.paceup.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		WATCH00000000000000001E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/PaceUpWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = HBD3XXQK45;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/PaceUpWatch-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Pace Up";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oanarinaldi.paceup.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Release;
 		};
@@ -404,6 +541,15 @@
 			buildConfigurations = (
 				PACEUP00000000000000001B /* Debug */,
 				PACEUP00000000000000001C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		WATCH000000000000000016 /* Build configuration list for PBXNativeTarget "PaceUpWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WATCH00000000000000001D /* Debug */,
+				WATCH00000000000000001E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

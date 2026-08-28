@@ -28,37 +28,35 @@ struct ProfileView: View {
                 VStack(spacing: PaceSpacing.l) {
                     header
                     totalsRow
+                    profileStoryCard
+                    identityCard
                     links
                     privacyNote
                 }
                 .padding(.horizontal, PaceSpacing.l)
                 .padding(.bottom, 100)
             }
-            .background(Color.paceInk.ignoresSafeArea())
+            .background { PacePageBackground(image: "ProfileHorizon", imageHeight: 470, opacity: 0.42) }
             .navigationTitle(String(localized: "Profile"))
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
     private var header: some View {
-        VStack(spacing: PaceSpacing.m) {
-            ZStack {
-                Circle()
-                    .fill(Color.paceLime.opacity(0.15))
-                    .frame(width: 86, height: 86)
-                Image(systemName: "figure.run")
-                    .font(.system(size: 34))
-                    .foregroundStyle(.paceLime)
+        HStack(spacing: PaceSpacing.m) {
+            ZStack { Circle().fill(Color.paceLime.opacity(0.16)); Circle().stroke(Color.paceLime.opacity(0.45)); Image(systemName: "figure.run").font(.title2).foregroundStyle(.paceLime) }.frame(width: 64, height: 64)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("MY PACE UP").font(.caption.bold()).tracking(1.8).foregroundStyle(.paceLime)
+                Text(settings.primaryGoal?.title ?? "Your movement story").font(.title3.bold())
+                Text(memberLine).font(.caption).foregroundStyle(.paceTextSecondary)
             }
+            Spacer()
+        }.padding(.top, PaceSpacing.s)
+    }
 
-            if let goal = settings.primaryGoal {
-                Text(goal.title)
-                    .font(.headline)
-            } else {
-                Text("Your movement")
-                    .font(.headline)
-            }
-        }
-        .padding(.top, PaceSpacing.s)
+    private var memberLine: String {
+        guard let first = activities.last?.startDate else { return "Ready for your first activity" }
+        return "Moving since \(first.formatted(.dateTime.month(.wide).year()))"
     }
 
     private var totalsRow: some View {
@@ -116,6 +114,38 @@ struct ProfileView: View {
                 LinkRow(symbol: "gearshape", title: String(localized: "Settings"))
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    private var profileStoryCard: some View {
+        EditorialImageCard(
+            image: "ProfileStory",
+            eyebrow: "Your story",
+            title: totals.activityCount == 0 ? "The first chapter is ready" : "Built across \(totals.activityCount) moments",
+            subtitle: "Your routes, milestones, and movement history belong to you."
+        )
+    }
+
+    private var identityCard: some View {
+        HStack(spacing: PaceSpacing.m) {
+            Image(systemName: "leaf.fill").foregroundStyle(.paceMint).frame(width: 38, height: 38).background(Color.paceMint.opacity(0.12), in: .circle)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(movementIdentity).font(.headline)
+                Text("Based on the activities you choose most often.").font(.caption).foregroundStyle(.paceTextSecondary)
+            }
+            Spacer()
+        }.padding(PaceSpacing.l).paceGlassCard(cornerRadius: PaceRadius.tile)
+    }
+
+    private var movementIdentity: String {
+        let mostCommon = Dictionary(grouping: activities, by: \.type).max { $0.value.count < $1.value.count }?.key
+        guard let mostCommon else { return "Your movement identity will grow here" }
+        switch mostCommon {
+        case .run, .trailRun: return "You are a momentum builder"
+        case .hike: return "You are an outdoor explorer"
+        case .cycle: return "You are a distance seeker"
+        case .wheelchair: return "You are a determined mover"
+        default: return "You are a consistency builder"
         }
     }
 

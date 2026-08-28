@@ -35,10 +35,12 @@ struct ProgressDashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: PaceSpacing.l) {
+                    pageIntro
                     PillPicker(options: Metric.allCases, title: \.title, selection: $metric)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     summaryCard
+                    progressImageCard
                     streakCard
                     weekCard
                     quickLinks
@@ -46,8 +48,9 @@ struct ProgressDashboardView: View {
                 .padding(.horizontal, PaceSpacing.l)
                 .padding(.bottom, 100)
             }
-            .background(Color.paceInk.ignoresSafeArea())
-            .navigationTitle(String(localized: "Your Progress"))
+            .background { PacePageBackground(image: "ProgressSummit", imageHeight: 460, opacity: 0.40) }
+            .navigationTitle(String(localized: "Progress"))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
@@ -63,29 +66,55 @@ struct ProgressDashboardView: View {
 
     // MARK: Cards
 
+    private var pageIntro: some View {
+        HStack(alignment: .bottom) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("YOUR MOMENTUM").font(.caption.bold()).tracking(1.8).foregroundStyle(.paceLime)
+                Text(progressHeadline).font(.title2.bold())
+                Text("A clear view of the work that is adding up.").font(.subheadline).foregroundStyle(.paceTextSecondary)
+            }
+            Spacer()
+            VStack(spacing: 1) {
+                Text("\(currentStreak)").font(.system(size: 30, weight: .bold, design: .rounded)).foregroundStyle(.paceLime)
+                Text("DAY STREAK").font(.system(size: 8, weight: .bold)).tracking(1).foregroundStyle(.paceTextTertiary)
+            }
+        }.padding(.top, PaceSpacing.s)
+    }
+
+    private var progressHeadline: String {
+        if currentStreak >= 7 { return "Consistency is your advantage" }
+        if currentStreak > 0 { return "Keep your rhythm alive" }
+        return "A fresh week starts here"
+    }
+
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: PaceSpacing.m) {
-            Text(headlineValue)
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(metric.title.uppercased()).font(.caption2.bold()).tracking(1.4).foregroundStyle(.paceTextTertiary)
+                    Text(headlineValue)
+                .font(.system(size: 34, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText())
-
-            Text(headlineCaption)
-                .font(.subheadline)
-                .foregroundStyle(.paceTextSecondary)
-
-            if let change = comparison.percentChange {
+                    Text(headlineCaption).font(.caption).foregroundStyle(.paceTextSecondary)
+                }
+                Spacer()
+                if let change = comparison.percentChange {
                 Label(
-                    String(localized: "\(change >= 0 ? "+" : "")\(Int(change.rounded()))% from last week"),
+                    String(localized: "\(change >= 0 ? "+" : "")\(Int(change.rounded()))%"),
                     systemImage: change >= 0 ? "arrow.up.right" : "arrow.down.right"
                 )
                 .font(.caption.weight(.medium))
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background((change >= 0 ? Color.paceLime : Color.paceAmber).opacity(0.12), in: .capsule)
                 .foregroundStyle(change >= 0 ? Color.paceLime : Color.paceAmber)
+                }
             }
 
             WeeklyBarChart(
                 bars: bars,
-                goal: metric == .steps ? Double(settings.dailyStepGoal) : 0
+                goal: metric == .steps ? Double(settings.dailyStepGoal) : 0,
+                usesMomentumGradient: metric == .steps
             )
             .padding(.top, PaceSpacing.s)
         }
@@ -95,35 +124,37 @@ struct ProgressDashboardView: View {
     }
 
     private var streakCard: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Current Streak")
-                    .font(.caption)
-                    .foregroundStyle(.paceTextSecondary)
-                Text("\(currentStreak) days 🔥")
-                    .font(.title3.weight(.bold))
+        HStack(spacing: PaceSpacing.m) {
+            ZStack { Circle().fill(Color.paceOrange.opacity(0.14)); Image(systemName: "flame.fill").foregroundStyle(.paceOrange) }.frame(width: 48, height: 48)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(currentStreak == 0 ? "Start a streak today" : "\(currentStreak)-day movement streak").font(.headline)
+                Text(streakMessage).font(.caption).foregroundStyle(.paceTextSecondary)
             }
             Spacer()
-            MiniRing(progress: min(Double(currentStreak) / 30, 1), lineWidth: 5)
-                .frame(width: 42, height: 42)
-        }
-        .padding(PaceSpacing.l)
-        .paceGlassCard(cornerRadius: PaceRadius.tile)
+            MiniRing(progress: min(Double(currentStreak) / 7, 1), lineWidth: 5).frame(width: 42, height: 42)
+        }.padding(PaceSpacing.l).paceGlassCard(cornerRadius: PaceRadius.tile)
     }
 
+    private var progressImageCard: some View {
+        EditorialImageCard(
+            image: "ProgressTrail",
+            eyebrow: "The long view",
+            title: currentStreak > 0 ? "Your rhythm is becoming a trail" : "Every trail begins with one mark",
+            subtitle: "Progress is the pattern you create, not a perfect number on one day."
+        )
+    }
+
+    private var streakMessage: String { currentStreak >= 7 ? "A full week of showing up." : "\(max(0, 7 - currentStreak)) days to a full week." }
+
     private var weekCard: some View {
-        HStack(spacing: PaceSpacing.m) {
-            StatTile(
-                value: PaceFormat.steps(weeklyStepTotal),
-                caption: String(localized: "This Week"),
-                tint: .paceLime
-            )
-            StatTile(
-                value: PaceFormat.steps(dailyAverage),
-                caption: String(localized: "Daily Average")
-            )
+        HStack(spacing: PaceSpacing.s) {
+            ProgressMetricTile(symbol: "shoeprints.fill", value: PaceFormat.steps(weeklyStepTotal), label: "week steps", tint: .paceLime)
+            ProgressMetricTile(symbol: "chart.bar.fill", value: PaceFormat.steps(dailyAverage), label: "daily average", tint: .paceCyan)
+            ProgressMetricTile(symbol: "figure.walk", value: "\(weekActivityCount)", label: "sessions", tint: .paceViolet)
         }
     }
+
+    private var weekActivityCount: Int { activities.filter { Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.contains($0.startDate) ?? false }.count }
 
     private var quickLinks: some View {
         VStack(spacing: PaceSpacing.s) {
@@ -222,6 +253,17 @@ struct ProgressDashboardView: View {
         case .distance:   return String(localized: "covered this week")
         case .activeTime: return String(localized: "moving this week")
         }
+    }
+}
+
+private struct ProgressMetricTile: View {
+    let symbol: String; let value: String; let label: String; let tint: Color
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Image(systemName: symbol).font(.caption).foregroundStyle(tint)
+            Text(value).font(.subheadline.bold()).lineLimit(1).minimumScaleFactor(0.72)
+            Text(label).font(.caption2).foregroundStyle(.paceTextTertiary)
+        }.frame(maxWidth: .infinity, alignment: .leading).padding(PaceSpacing.m).paceGlassCard(cornerRadius: PaceRadius.tile)
     }
 }
 

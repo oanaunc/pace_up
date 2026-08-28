@@ -44,7 +44,10 @@ Track your steps, runs, walks and hikes with a live GPS map. No account, no sign
 ## Description (4000 char max)
 
 ```
-Pace Up is a step counter and GPS tracker for walks, runs, hikes and rides. Open it, grant Health and Location, set a step goal, and start moving. There's no account to create, because there's no server to create one on.
+Pace Up is a private movement coach, step counter and GPS tracker for walks, runs, hikes and rides. Open it, choose your direction, and build a movement rhythm that fits real life. There's no account to create, because there's no server to create one on.
+
+YOUR JOURNEY, NOT A GENERIC SCORE
+The Journey hub turns your recent activity into helpful weekly guidance. See your momentum, active days and distance together, then choose a structured path: prepare for your First 5K, make movement a Daily Reset, or build confidence for a Weekend Explorer adventure.
 
 YOUR DAY AT A GLANCE
 See your step count against your daily goal in one ring, with distance, calories and active time underneath. Steps come from Apple Health, so the number matches the Health app instead of arguing with it.
@@ -63,6 +66,9 @@ Weekly step, distance and active-time charts. Current and longest streaks. Perso
 WIDGETS
 Small, medium and large Home Screen widgets showing your steps, goal progress, distance, calories and the last seven days.
 
+START FROM APPLE WATCH
+Start an outdoor walk, run, hike or ride from your wrist. See live time, heart rate and distance, pause or resume, then save the finished workout directly to Apple Health.
+
 WORKS WITH APPLE HEALTH
 Pace Up reads steps, distance, heart rate and workouts from Apple Health, and writes your finished activities back as workouts with their routes. That means your history stays in Health even if you delete Pace Up.
 
@@ -71,7 +77,7 @@ No account. No sign-up. No server. No ads. No analytics. No in-app purchases. Pa
 
 You also decide how much to keep. Under Data & Privacy you can export everything as a readable backup file, export any route as GPX, or clear old GPS traces after 30 days while keeping your distances, times, splits, records and streaks intact. Nothing Pace Up deletes ever touches your Apple Health history.
 
-Requires iOS 26 or later. iPhone only.
+Requires iOS 26 or later. Apple Watch workout recording requires watchOS 10 or later.
 
 Pace Up is a tracking tool, not medical advice. Step, distance, pace and calorie figures are estimates from consumer sensors.
 ```

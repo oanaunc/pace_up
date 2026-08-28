@@ -38,16 +38,24 @@ struct TodayView: View {
                 VStack(spacing: PaceSpacing.l) {
                     greeting
                     ringCard
+                    dailyInvitation
                     goalNudge
                     movementCard
                     if !todaysActivities.isEmpty {
                         todaysActivityList
                     }
+                    motivationCard
                 }
                 .padding(.horizontal, PaceSpacing.l)
                 .padding(.bottom, 100)
             }
-            .background(Color.paceInk.ignoresSafeArea())
+            .background {
+                ZStack(alignment: .top) {
+                    Color.paceInk
+                    Image("MovementDawn").resizable().scaledToFill().frame(height: 330).clipped().opacity(0.28)
+                    LinearGradient(colors: [.clear, .paceInk.opacity(0.72), .paceInk], startPoint: .top, endPoint: .bottom).frame(height: 380)
+                }.ignoresSafeArea()
+            }
             .navigationDestination(isPresented: $showsMap) {
                 TodaysMapView(activities: todaysActivities)
             }
@@ -137,6 +145,17 @@ struct TodayView: View {
         return min(Double(health.todaySteps) / Double(settings.dailyStepGoal), 1)
     }
 
+    private var dailyInvitation: some View {
+        EditorialImageCard(
+            image: "TodayInvitation",
+            eyebrow: "Your next move",
+            title: remainingSteps > 0 ? "Make the day yours" : "You showed up today",
+            subtitle: remainingSteps > 0
+                ? "A short walk is enough to change the shape of your day."
+                : "Enjoy the feeling—and move again only if it feels good."
+        )
+    }
+
     private var healthPrompt: some View {
         HStack(spacing: 8) {
             Image(systemName: "heart.text.square")
@@ -166,11 +185,6 @@ struct TodayView: View {
                      : String(localized: "Daily goal reached. Nice work."))
                     .font(.subheadline)
                 Spacer()
-                if remainingSteps > 0 {
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.paceTextTertiary)
-                }
             }
             .padding(PaceSpacing.l)
             .paceGlassCard(cornerRadius: PaceRadius.tile)
@@ -232,6 +246,73 @@ struct TodayView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    private var motivationCard: some View {
+        TimelineView(.periodic(from: .now, by: 10)) { context in
+            let quote = motivationQuotes[Int(context.date.timeIntervalSince1970 / 10) % motivationQuotes.count]
+            ZStack(alignment: .topTrailing) {
+                LinearGradient(
+                    colors: [Color.paceOrange.opacity(0.32), Color.paceViolet.opacity(0.20), Color.paceSurface],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+
+                Circle()
+                    .fill(Color.paceAmber.opacity(0.18))
+                    .frame(width: 150, height: 150)
+                    .blur(radius: 35)
+                    .offset(x: 45, y: -55)
+
+                Text("“")
+                    .font(.system(size: 100, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.white.opacity(0.08))
+                    .offset(x: -10, y: -22)
+
+                VStack(alignment: .leading, spacing: PaceSpacing.m) {
+                    HStack {
+                        Label("A little momentum", systemImage: "sparkles")
+                            .font(.caption.bold())
+                            .foregroundStyle(.paceAmber)
+                        Spacer()
+                        HStack(spacing: 4) {
+                            ForEach(motivationQuotes.indices, id: \.self) { index in
+                                Capsule()
+                                    .fill(index == motivationQuotes.firstIndex(of: quote) ? Color.paceAmber : Color.white.opacity(0.22))
+                                    .frame(width: index == motivationQuotes.firstIndex(of: quote) ? 14 : 4, height: 4)
+                            }
+                        }
+                    }
+                    Text(quote)
+                        .font(.title3.weight(.semibold))
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("NEW THOUGHT EVERY 10 SECONDS")
+                        .font(.system(size: 8, weight: .bold))
+                        .tracking(1.2)
+                        .foregroundStyle(.white.opacity(0.42))
+                }
+                .padding(PaceSpacing.l)
+            }
+            .id(quote)
+            .transition(.opacity)
+            .clipShape(.rect(cornerRadius: PaceRadius.card))
+            .overlay {
+                RoundedRectangle(cornerRadius: PaceRadius.card)
+                    .stroke(Color.paceAmber.opacity(0.20))
+            }
+        }
+        .accessibilityLabel("Motivation: \(motivationQuotes[0])")
+    }
+
+    private var motivationQuotes: [String] {
+        [
+            String(localized: "You do not need a perfect day—just one honest step forward."),
+            String(localized: "Move gently enough to return tomorrow."),
+            String(localized: "Consistency makes ordinary days powerful."),
+            String(localized: "Your pace is valid. Keep it yours."),
+            String(localized: "Ten quiet minutes can change the shape of a day.")
+        ]
     }
 }
 

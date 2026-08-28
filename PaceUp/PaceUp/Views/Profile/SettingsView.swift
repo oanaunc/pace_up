@@ -80,12 +80,6 @@ struct SettingsView: View {
 
             Section {
                 HStack {
-                    Text("Version")
-                    Spacer()
-                    Text("\(Bundle.main.shortVersionString) (\(Bundle.main.buildNumber))")
-                        .foregroundStyle(.paceTextSecondary)
-                }
-                HStack {
                     Text("Maps")
                     Spacer()
                     Text("Apple MapKit")

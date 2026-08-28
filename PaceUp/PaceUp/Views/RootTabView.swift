@@ -8,7 +8,7 @@ import SwiftData
 
 enum AppTab: Hashable {
     case today
-    case activity
+    case journey
     case start
     case progress
     case profile
@@ -41,8 +41,8 @@ struct RootTabView: View {
             Tab(String(localized: "Today"), systemImage: "sun.max.fill", value: AppTab.today) {
                 TodayView()
             }
-            Tab(String(localized: "Activity"), systemImage: "chart.bar.fill", value: AppTab.activity) {
-                ActivityListView()
+            Tab(String(localized: "Journey"), systemImage: "map.fill", value: AppTab.journey) {
+                JourneyView()
             }
             Tab(String(localized: "Start"), systemImage: "record.circle", value: AppTab.start) {
                 StartActivityView()

@@ -62,6 +62,10 @@ struct SmallStepView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            Label("PACE UP", systemImage: "figure.walk")
+                .font(.system(size: 9, weight: .bold))
+                .tracking(1)
+                .foregroundStyle(.widgetLime)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(snapshot.steps.formatted())
                     .font(.system(size: 26, weight: .bold, design: .rounded))
@@ -80,7 +84,8 @@ struct SmallStepView: View {
             MiniBars(values: snapshot.weeklySteps, tint: .widgetLime)
                 .frame(height: 22)
         }
-        .containerBackground(for: .widget) { Color.widgetInk }
+        .foregroundStyle(.white)
+        .containerBackground(for: .widget) { WidgetBackdrop() }
     }
 }
 
@@ -112,7 +117,8 @@ struct MediumStepView: View {
             MiniBars(values: snapshot.weeklySteps, tint: .widgetLime)
                 .frame(width: 110)
         }
-        .containerBackground(for: .widget) { Color.widgetInk }
+        .foregroundStyle(.white)
+        .containerBackground(for: .widget) { WidgetBackdrop() }
     }
 }
 
@@ -121,6 +127,10 @@ struct LargeStepView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Label("TODAY · PACE UP", systemImage: "figure.walk")
+                .font(.caption2.bold())
+                .tracking(1.1)
+                .foregroundStyle(.widgetLime)
             HStack(alignment: .firstTextBaseline) {
                 Text(snapshot.steps.formatted())
                     .font(.system(size: 38, weight: .bold, design: .rounded))
@@ -150,7 +160,8 @@ struct LargeStepView: View {
                 goal: snapshot.goal
             )
         }
-        .containerBackground(for: .widget) { Color.widgetInk }
+        .foregroundStyle(.white)
+        .containerBackground(for: .widget) { WidgetBackdrop() }
     }
 
     private var formattedActive: String {
@@ -161,6 +172,30 @@ struct LargeStepView: View {
 }
 
 // MARK: - Pieces
+
+struct WidgetBackdrop: View {
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Image("WidgetTrail")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                LinearGradient(
+                    colors: [Color.black.opacity(0.72), Color.black.opacity(0.48), Color.black.opacity(0.28)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                LinearGradient(
+                    colors: [Color.black.opacity(0.15), Color.black.opacity(0.52)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+        }
+    }
+}
 
 struct WidgetStat: View {
     var value: String

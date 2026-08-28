@@ -10,56 +10,35 @@ struct StartActivityView: View {
 
     @Environment(ActivityRecorder.self) private var recorder
 
-    @State private var showsMoreTypes = false
-
-    private var visibleTypes: [ActivityType] {
-        showsMoreTypes ? ActivityType.allCases : [.walk, .run, .hike]
-    }
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: PaceSpacing.xl) {
-                Text("What do you want to do?")
-                    .font(.largeTitle.bold())
-                    .padding(.top, PaceSpacing.l)
+            ScrollView {
+                VStack(alignment: .leading, spacing: PaceSpacing.l) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("START MOVING").font(.caption.bold()).tracking(1.8).foregroundStyle(.paceLime)
+                        Text("Choose your activity").font(.title2.bold())
+                        Text("Every route counts. Pick a mode and set your intention.")
+                            .font(.subheadline).foregroundStyle(.paceTextSecondary)
+                    }.padding(.top, PaceSpacing.s)
 
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(visibleTypes) { type in
+                    LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(ActivityType.allCases) { type in
                         NavigationLink(value: type) {
                             ActivityTypeCard(type: type)
                         }
                         .buttonStyle(.plain)
                     }
-
-                    if !showsMoreTypes {
-                        Button {
-                            withAnimation(.snappy) { showsMoreTypes = true }
-                        } label: {
-                            VStack(spacing: 10) {
-                                Image(systemName: "ellipsis")
-                                    .font(.title)
-                                    .foregroundStyle(.paceTextSecondary)
-                                Text("More")
-                                    .font(.headline)
-                                    .foregroundStyle(.paceTextPrimary)
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 96)
-                            .padding(PaceSpacing.l)
-                            .paceGlassCard(cornerRadius: PaceRadius.tile)
-                        }
-                        .buttonStyle(.plain)
                     }
+
+                    locationNotice
                 }
-
-                locationNotice
-
-                Spacer()
+                .padding(.horizontal, PaceSpacing.l)
+                .padding(.bottom, 100)
             }
-            .padding(.horizontal, PaceSpacing.l)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.paceInk.ignoresSafeArea())
-            .navigationTitle(String(localized: "Start Activity"))
+            .background { PacePageBackground(image: "StartTrails", imageHeight: 470, opacity: 0.42) }
+            .navigationTitle(String(localized: "Start"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: ActivityType.self) { type in
                 ActivitySetupView(type: type)
@@ -118,24 +97,27 @@ struct ActivityTypeCard: View {
     var isSelected: Bool = false
 
     var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: type.symbolName)
-                .font(.title)
-                .foregroundStyle(type.tint)
-            Text(type.displayName)
-                .font(.headline)
-                .foregroundStyle(.paceTextPrimary)
+        ZStack(alignment: .bottomLeading) {
+            Image(type.artworkName)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+                .frame(height: 132)
+                .clipped()
+            LinearGradient(colors: [.clear, Color.paceInk.opacity(0.92)], startPoint: .center, endPoint: .bottom)
+            HStack(spacing: 7) {
+                Text(type.displayName)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
+                Circle().fill(type.tint).frame(width: 7, height: 7)
+            }
+            .padding(12)
         }
-        .frame(maxWidth: .infinity, minHeight: 96)
-        .padding(PaceSpacing.l)
-        .background {
-            RoundedRectangle(cornerRadius: PaceRadius.tile)
-                .fill(Color.white.opacity(0.05))
-                .overlay {
-                    RoundedRectangle(cornerRadius: PaceRadius.tile)
-                        .strokeBorder(isSelected ? type.tint : Color.paceHairline, lineWidth: isSelected ? 1.5 : 1)
-                }
-        }
+        .clipShape(.rect(cornerRadius: PaceRadius.tile))
+        .overlay { RoundedRectangle(cornerRadius: PaceRadius.tile).strokeBorder(isSelected ? type.tint : Color.white.opacity(0.12), lineWidth: isSelected ? 2 : 1) }
     }
 }
 

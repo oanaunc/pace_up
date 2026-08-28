@@ -49,8 +49,11 @@ extension ActivityType {
         switch self {
         case .walk:  return .walking
         case .run:   return .running
+        case .trailRun: return .running
         case .hike:  return .hiking
+        case .nordicWalk: return .walking
         case .cycle: return .cycling
+        case .wheelchair: return .wheelchairWalkPace
         case .other: return .other
         }
     }

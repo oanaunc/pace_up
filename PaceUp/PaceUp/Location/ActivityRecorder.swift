@@ -613,8 +613,8 @@ final class ActivityRecorder {
 
         let met: Double
         switch activityType {
-        case .run:   met = max(6, min(16, 1.0 + kmh * 1.0))
-        case .walk:  met = max(2.5, min(7, 1.5 + kmh * 0.6))
+        case .run, .trailRun: met = max(6, min(16, 1.0 + kmh * 1.0))
+        case .walk, .nordicWalk, .wheelchair: met = max(2.5, min(7, 1.5 + kmh * 0.6))
         case .hike:  met = 6.0
         case .cycle: met = max(4, min(14, kmh * 0.5))
         case .other: met = 4.0

@@ -1,28 +1,31 @@
-# App Review reply — Submission ID e2c0e931-fe74-46d9-9305-fbf5ae444748
+# App Review reply — Submission e2c0e931-fe74-46d9-9305-fbf5ae444748
 
-Send in App Store Connect → App Review, **after** uploading build 1.0 (4) and updating the Age Rating.
+Paste this into App Store Connect after uploading build 1.0 (5).
 
 ---
 
 Hello,
 
-Thank you for the detailed review. Both issues have been addressed.
+Thank you for reviewing Pace Up and for raising Guideline 4.3(a). Pace Up is an independently designed and developed application. It is not a purchased template, white-label product, clone, or repackaged binary, and we have not submitted similar apps from this or another account.
 
-**Guideline 5.1.1(iv) — HealthKit permission request**
+For this new build we made the product's original purpose and functionality substantially clearer:
 
-You are right that the onboarding screen let the user defer the permission request. The "Not now" button has been removed. The Health screen now explains what Pace Up reads and why, and its only action is a "Continue" button that always presents the system HealthKit authorization sheet. The user's choice is made in the system sheet itself, and onboarding proceeds either way.
+- Journey is a new personalized movement hub that analyses the user's own recent sessions and active days to provide adaptive weekly guidance.
+- Three distinct, structured movement programs are included: First 5K, Daily Reset, and Weekend Explorer. Users can review sessions and activate a plan locally.
+- Journey brings together workout history, personal records, achievements, current momentum, and plan progress in a cohesive experience.
+- Pace Up now has original commissioned route-landscape artwork and a more distinctive branded Today and Journey experience.
+- A complete Apple Watch companion is included. Users can start outdoor walks, runs, hikes, and rides directly from the watch; see live duration, heart rate, and distance; pause or resume; and save the completed workout to Apple Health.
 
-The explanatory text was kept because Pace Up requests several read types at once (steps, walking and running distance, workouts, heart rate, active energy) plus write access for finished workouts, and the screen tells the user what each is used for before iOS asks. It no longer offers any way to bypass or postpone the prompt.
+The app's existing functionality is also implemented specifically for Pace Up: live GPS route recording, auto-pause, crash recovery for interrupted activities, route simplification and retention controls, pace/elevation/heart-rate charts, HealthKit workout writing, GPX and full-data export, widgets, achievements, streaks, and personal records. All activity data remains on-device; the app has no account, analytics, advertising, or backend.
 
-Health access is optional to the app's core function: if the user declines in the system sheet, activity recording continues using GPS only, and the app degrades to a zero state rather than blocking. Settings → Apple Health contains an "Open Health Settings" link so the user can change the decision at any time.
+To review the newly added functionality:
 
-This is included in build 1.0 (4).
+1. Open the Journey tab to see adaptive weekly guidance, plans, history, records, and achievements.
+2. Open any plan to see its structured sessions and activate it.
+3. On a paired Apple Watch, open Pace Up, select an activity, and start a workout. Swipe to the controls page to pause, resume, or finish.
+4. On iPhone, tap Start to test the GPS recorder and its live metrics.
 
-**Guideline 2.3.6 — Age Rating**
-
-"Health or Wellness Topics" has been set to "Yes" on the App Information page. Pace Up is a fitness tracker that displays steps, distance, active energy and workout history, so the previous selection was incorrect.
-
-Please let us know if anything else is needed.
+We respectfully request reconsideration under Guideline 4.3(a). If the similarity concern relates to a specific asset, metadata field, previous submission, or binary signature, please identify it so we can investigate it directly.
 
 Best regards,
 Oana Rinaldi

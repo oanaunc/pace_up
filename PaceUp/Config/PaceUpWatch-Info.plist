@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>WKApplication</key><true/>
+<key>WKCompanionAppBundleIdentifier</key><string>com.oanarinaldi.paceup</string>
+<key>WKBackgroundModes</key>
+<array><string>workout-processing</string></array>
+<key>NSHealthShareUsageDescription</key><string>Pace Up reads live heart rate and distance to show your workout progress.</string>
+<key>NSHealthUpdateUsageDescription</key><string>Pace Up saves workouts started from Apple Watch to Apple Health.</string>
+</dict></plist>
