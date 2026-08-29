@@ -27,6 +27,7 @@
 import SwiftUI
 import SwiftData
 import MapKit
+import CoreLocation
 
 struct ExploreMapView: View {
 
@@ -123,17 +124,22 @@ struct ExploreMapView: View {
                 }
             }
         }
-        .ignoresSafeArea(edges: .bottom)
+        // All edges, not just the bottom. With `.bottom` only, the Map drew
+        // under the status and navigation bars while the Canvas overlay stopped
+        // at the safe-area inset, leaving an unfogged strip of live map across
+        // the top of the screen.
+        .ignoresSafeArea()
     }
 
     private func fogCanvas(proxy: MapProxy) -> some View {
         Canvas { context, size in
-            context.fill(
-                Path(CGRect(origin: .zero, size: size)),
-                with: .color(Color.paceInk.opacity(0.93))
-            )
+            let fog = Color.paceInk.opacity(0.93)
+            let full = Path(CGRect(origin: .zero, size: size))
 
-            guard let region, !visibleCells.isEmpty else { return }
+            guard let region, !visibleCells.isEmpty else {
+                context.fill(full, with: .color(fog))
+                return
+            }
 
             // Metres-to-points from the visible span rather than by projecting
             // a second coordinate per cell: one division instead of thousands
@@ -141,43 +147,71 @@ struct ExploreMapView: View {
             // larger than a pixel.
             let metresPerDegreeLatitude = 111_320.0
             let visibleMetres = region.span.latitudeDelta * metresPerDegreeLatitude
-            guard visibleMetres > 0 else { return }
+            guard visibleMetres > 0 else {
+                context.fill(full, with: .color(fog))
+                return
+            }
 
             // `cellScale` blocks are `cellScale` cells wide, so their discs grow
             // in step. The floor keeps a block visible even if the culling pass
             // and the real canvas height disagree about scale.
-            let radius = max(1.5,
+            let radius = max(3,
                              ExplorationGrid.renderRadiusMeters
                              * Double(cellScale)
                              * size.height / visibleMetres)
 
-            context.blendMode = .destinationOut
-
+            var holes = Path()
             var drawn = 0
             for cell in visibleCells {
                 guard drawn < maxDiscsPerFrame else { break }
                 let coordinate = ExplorationGrid.center(ofBlock: cell, factor: cellScale)
-                guard let point = proxy.convert(coordinate, to: .local) else { continue }
+                let point = proxy.convert(coordinate, to: .local)
+                    ?? Self.project(coordinate, in: region, size: size)
 
                 // Cheap off-screen reject. The margin on the window means the
                 // list contains cells beyond the edges by design.
                 guard point.x > -radius, point.x < size.width + radius,
                       point.y > -radius, point.y < size.height + radius else { continue }
 
-                context.fill(
-                    Path(ellipseIn: CGRect(x: point.x - radius,
-                                           y: point.y - radius,
-                                           width: radius * 2,
-                                           height: radius * 2)),
-                    with: .color(.black)
-                )
+                holes.addEllipse(in: CGRect(x: point.x - radius,
+                                            y: point.y - radius,
+                                            width: radius * 2,
+                                            height: radius * 2))
                 drawn += 1
             }
+
+            // Clip the holes out, then paint fog over what remains.
+            //
+            // This replaces a `.destinationOut` blend, which drew nothing at
+            // all: erasing by blend mode depends on the fills compositing
+            // against the fog inside an isolated layer, and `.compositingGroup()`
+            // on the Canvas did not give it one. Clipping needs no compositing
+            // behaviour and cannot silently no-op.
+            //
+            // It also has to be `clip`, not an even-odd fill: the discs overlap
+            // by design, and under even-odd every overlap would flip back to
+            // opaque and stipple the cleared corridor. Clipping unions them.
+            context.clip(to: holes, options: .inverse)
+            context.fill(full, with: .color(fog))
         }
-        // The destinationOut fills must composite against the fog inside this
-        // view's own layer. Without an explicit group they can blend against
-        // whatever is behind the Canvas and erase the map as well.
-        .compositingGroup()
+    }
+
+    /// Screen position for a coordinate, from the visible region alone.
+    ///
+    /// Fallback for when `MapProxy.convert` returns nil, which it does before
+    /// the map has laid out. Linear in both axes: it ignores Mercator curvature
+    /// and any map rotation, which is imperceptible across a city-sized span and
+    /// much better than dropping the cell entirely.
+    private static func project(_ coordinate: CLLocationCoordinate2D,
+                                in region: MKCoordinateRegion,
+                                size: CGSize) -> CGPoint {
+        let latSpan = region.span.latitudeDelta
+        let lonSpan = region.span.longitudeDelta
+        guard latSpan > 0, lonSpan > 0 else { return CGPoint(x: -1e6, y: -1e6) }
+
+        let x = (coordinate.longitude - (region.center.longitude - lonSpan / 2)) / lonSpan * size.width
+        let y = ((region.center.latitude + latSpan / 2) - coordinate.latitude) / latSpan * size.height
+        return CGPoint(x: x, y: y)
     }
 
     // MARK: Header
@@ -325,10 +359,21 @@ struct ExploreMapView: View {
     private func frameIfNeeded() {
         guard !hasFramed, let center = store.explorationCenter else { return }
         hasFramed = true
-        camera = .region(MKCoordinateRegion(
+
+        // Tight enough that a short walk is more than a speck. At the previous
+        // 0.08° the whole of a 0.07 km² history fit inside a couple of discs.
+        let framed = MKCoordinateRegion(
             center: center,
-            span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
-        ))
+            span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012)
+        )
+        camera = .region(framed)
+
+        // Seed `region` here rather than waiting for the first camera-change
+        // callback. Until that fires `region` is nil, and the Canvas has no
+        // scale to draw at — so the very first frame after opening Terra was
+        // solid fog with no holes in it.
+        region = framed
+        culledFor = framed
     }
 
     /// True once the map has panned or zoomed far enough that the culled list
