@@ -72,7 +72,11 @@ struct DataPrivacyView: View {
             DangerSection(
                 retentionDays: settings.retentionDays,
                 onDeleteOld: { showsDeleteOldConfirmation = true },
-                onDeleteAll: { showsDeleteAllConfirmation = true }
+                onDeleteAll: { showsDeleteAllConfirmation = true },
+                onResetTerra: {
+                    ExplorationStore.shared.reset()
+                    alertMessage = String(localized: "Terra map cleared.")
+                }
             )
         }
     }
@@ -166,6 +170,10 @@ struct DataPrivacyView: View {
 
     private func performDeleteAll() {
         ActivityStore(context: context).deleteAll()
+        // Terra is derived location history. Leaving it lit after the user has
+        // asked for everything to go would be the one place the app kept a
+        // record of where they had been.
+        ExplorationStore.shared.reset()
         alertMessage = String(localized: "All Pace Up data deleted.")
     }
 }
@@ -264,6 +272,7 @@ private struct DangerSection: View {
     var retentionDays: Int
     var onDeleteOld: () -> Void
     var onDeleteAll: () -> Void
+    var onResetTerra: () -> Void
 
     private var deleteOldTitle: String {
         String(localized: "Delete Activities Older Than \(retentionDays) Days")
@@ -275,13 +284,17 @@ private struct DangerSection: View {
                 Label(deleteOldTitle, systemImage: "calendar.badge.minus")
             }
 
+            Button(role: .destructive, action: onResetTerra) {
+                Label(String(localized: "Clear Terra Map"), systemImage: "map")
+            }
+
             Button(role: .destructive, action: onDeleteAll) {
                 Label(String(localized: "Delete All Pace Up Data"), systemImage: "trash")
             }
         } header: {
             Text("Danger zone")
         } footer: {
-            Text("Unlike the cleanup above, these remove entire activities. Lifetime totals, streaks and personal records for the deleted period will be lost. Neither touches Apple Health.")
+            Text("Unlike the cleanup above, these remove entire activities. Lifetime totals, streaks and personal records for the deleted period will be lost. Clearing Terra re-darkens the map without touching your activities; it will refill from any activities you still have. None of these touch Apple Health.")
         }
     }
 }

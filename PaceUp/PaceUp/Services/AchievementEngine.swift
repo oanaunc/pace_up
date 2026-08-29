@@ -91,6 +91,22 @@ enum AchievementEngine {
             award(.elevation500, on: climb.startDate, activityID: climb.id)
         }
 
+        // Terra.
+        //
+        // Read from the exploration store rather than recomputed here: the
+        // store is the only thing that knows which activities have actually
+        // been folded in, and it is already loaded by the time any screen that
+        // triggers an evaluation is on display. If it has not been loaded yet
+        // the area reads zero and no badge is awarded — the evaluation runs
+        // over the whole history every time, so the badge simply arrives on the
+        // next pass rather than being missed.
+        let terra = ExplorationStore.shared
+        let exploredArea = terra.exploredSquareKilometres
+        if exploredArea >= 1 { award(.terra1, on: .now) }
+        if exploredArea >= 10 { award(.terra10, on: .now) }
+        if exploredArea >= 50 { award(.terra50, on: .now) }
+        if terra.explorerStreak >= 7 { award(.explorerStreak7, on: .now) }
+
         if !newlyUnlocked.isEmpty {
             try? context.save()
         }

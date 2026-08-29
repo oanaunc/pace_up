@@ -141,6 +141,10 @@ private struct StepperButton: View {
                 .font(.headline)
                 .foregroundStyle(.paceTextPrimary)
                 .frame(width: 40, height: 40)
+                // Without this the hit area is the plus or minus glyph, not the
+                // 40-point circle the user is aiming at — during onboarding,
+                // where a step goal that will not change is a bad first minute.
+                .contentShape(.circle)
         }
         .buttonStyle(.plain)
         .paceGlassCircle()

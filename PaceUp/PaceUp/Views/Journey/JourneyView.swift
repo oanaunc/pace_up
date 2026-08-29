@@ -19,6 +19,7 @@ struct JourneyView: View {
             ScrollView {
                 VStack(spacing: PaceSpacing.l) {
                     hero
+                    ExploreCard()
                     if let activePlan { activePlanCard(activePlan) }
                     weeklyCoach
                     plans

@@ -169,7 +169,6 @@ struct StepGoalView: View {
 
     @Environment(AppSettings.self) private var settings
     @State private var goal: Double = 10000
-    @State private var isCustom = false
 
     private let presets = [5000, 7500, 10000, 12500, 15000]
 
@@ -198,10 +197,7 @@ struct StepGoalView: View {
                 HStack(spacing: PaceSpacing.s) {
                     ForEach(presets, id: \.self) { preset in
                         Button {
-                            withAnimation(.snappy) {
-                                goal = Double(preset)
-                                isCustom = false
-                            }
+                            withAnimation(.snappy) { goal = Double(preset) }
                         } label: {
                             Text(preset >= 1000 ? "\(preset / 1000)\(preset % 1000 == 0 ? "K" : ".5K")" : "\(preset)")
                                 .font(.subheadline.weight(Int(goal) == preset ? .bold : .regular))
@@ -241,6 +237,13 @@ struct StepGoalView: View {
         .navigationTitle(String(localized: "Step Goal"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { goal = Double(settings.dailyStepGoal) }
-        .onDisappear { settings.dailyStepGoal = Int(goal) }
+        // Saved as it changes, not on disappear. `onDisappear` is not
+        // guaranteed — the app being killed while this screen is open loses the
+        // new goal silently — and the widget snapshot reads `dailyStepGoal`, so
+        // deferring the write also leaves the Home Screen showing the old ring
+        // until the user happens to navigate back.
+        .onChange(of: goal) { _, newValue in
+            settings.dailyStepGoal = Int(newValue)
+        }
     }
 }

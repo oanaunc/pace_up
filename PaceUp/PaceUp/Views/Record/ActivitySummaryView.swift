@@ -25,9 +25,15 @@ struct ActivitySummaryView: View {
     @State private var note: String = ""
     @State private var feeling: Int?
     @State private var showsNoteField = false
+    @FocusState private var isNoteFocused: Bool
+
+    /// Scroll anchor for the note card.
+    private static let noteAnchor = "noteField"
     @State private var isSaving = false
     @State private var showsDiscardConfirmation = false
     @State private var newAchievements: [AchievementKind] = []
+    /// New and total Terra cells for this route. Nil until measured.
+    @State private var newGround: (newCells: Int, totalCells: Int)?
 
     private let feelings: [(value: Int, symbol: String, label: String)] = [
         (1, "😣", String(localized: "Rough")),
@@ -39,19 +45,37 @@ struct ActivitySummaryView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: PaceSpacing.l) {
-                    header
-                    metrics
-                    if finished.points.count > 1 {
-                        routeCard
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: PaceSpacing.l) {
+                        header
+                        metrics
+                        if finished.points.count > 1 {
+                            routeCard
+                            newGroundCard
+                        }
+                        feelingPicker
+                        if showsNoteField { noteField.id(Self.noteAnchor) }
+                        if !newAchievements.isEmpty { achievementBanner }
                     }
-                    feelingPicker
-                    if showsNoteField { noteField }
-                    if !newAchievements.isEmpty { achievementBanner }
+                    .padding(.horizontal, PaceSpacing.l)
+                    .padding(.bottom, 140)
                 }
-                .padding(.horizontal, PaceSpacing.l)
-                .padding(.bottom, 140)
+                // "Add Note" inserts the field at the bottom of a scroll view
+                // that is already taller than the screen, underneath a pinned
+                // action bar. Without scrolling to it the state flips, the
+                // field appears off-screen, and the button reads as doing
+                // nothing at all.
+                .onChange(of: showsNoteField) { _, shown in
+                    guard shown else {
+                        isNoteFocused = false
+                        return
+                    }
+                    withAnimation(.snappy) {
+                        proxy.scrollTo(Self.noteAnchor, anchor: .bottom)
+                    }
+                    isNoteFocused = true
+                }
             }
             .background(Color.paceInk.ignoresSafeArea())
             .safeAreaInset(edge: .bottom) { actions }
@@ -79,6 +103,15 @@ struct ActivitySummaryView: View {
             .onAppear {
                 if title.isEmpty {
                     title = Activity.generatedTitle(for: finished.type, at: finished.startDate)
+                }
+                if newGround == nil, finished.points.count > 1 {
+                    // Simplify first. Terra is built from `thumbnailRoute`, so
+                    // measuring the full trace here would promise a figure the
+                    // map then does not deliver.
+                    let stored = RouteCodec.simplified(finished.points, limit: 60)
+                    newGround = ExplorationStore.shared.previewNewGround(
+                        along: stored.map(\.coordinate)
+                    )
                 }
             }
         }
@@ -137,6 +170,50 @@ struct ActivitySummaryView: View {
             .paceGlassCard()
     }
 
+    /// What this route added to Terra.
+    ///
+    /// Shown on every recorded activity, which is the point: Terra is the app's
+    /// distinguishing feature and a tab the user has to remember to visit is a
+    /// feature most users never find. The number lands here, once per run,
+    /// while they are already looking at the screen.
+    @ViewBuilder
+    private var newGroundCard: some View {
+        if let newGround, newGround.totalCells > 0 {
+            let area = ExplorationGrid.areaSquareKilometres(cellCount: newGround.newCells)
+            let share = Int((Double(newGround.newCells) / Double(newGround.totalCells) * 100).rounded())
+
+            HStack(spacing: PaceSpacing.m) {
+                Image(systemName: newGround.newCells == 0 ? "map" : "map.fill")
+                    .font(.title2)
+                    .foregroundStyle(newGround.newCells == 0 ? .paceTextTertiary : .paceLime)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        (newGround.newCells == 0 ? Color.white.opacity(0.05) : Color.paceLime.opacity(0.12)),
+                        in: .circle
+                    )
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(newGroundHeadline(newCells: newGround.newCells, share: share))
+                        .font(.headline)
+                    Text(newGround.newCells == 0
+                         ? String(localized: "Ground you had already covered.")
+                         : String(format: String(localized: "%.2f km² added to Terra."), area))
+                        .font(.caption)
+                        .foregroundStyle(.paceTextSecondary)
+                }
+                Spacer()
+            }
+            .padding(PaceSpacing.l)
+            .paceGlassCard()
+        }
+    }
+
+    private func newGroundHeadline(newCells: Int, share: Int) -> String {
+        if newCells == 0 { return String(localized: "Familiar ground") }
+        if share >= 99 { return String(localized: "All of it was new") }
+        return String(localized: "\(share)% new ground")
+    }
+
     private var feelingPicker: some View {
         VStack(spacing: PaceSpacing.m) {
             Text("How did it feel?")
@@ -186,6 +263,8 @@ struct ActivitySummaryView: View {
                 .textFieldStyle(.plain)
                 .font(.subheadline)
                 .lineLimit(3...6)
+                .focused($isNoteFocused)
+                .submitLabel(.done)
         }
         .padding(PaceSpacing.l)
         .paceGlassCard()

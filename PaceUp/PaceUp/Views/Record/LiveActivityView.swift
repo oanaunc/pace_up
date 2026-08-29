@@ -131,11 +131,19 @@ struct LiveActivityView: View {
                 }
 
                 HStack(spacing: PaceSpacing.xl) {
+                    // `contentShape` is load-bearing on every one of these: the
+                    // glass is applied outside the Button, so the hit area is
+                    // otherwise the glyph itself and a tap on the visible circle
+                    // falls through to the map behind it. On this screen that
+                    // means a runner jabbing at Lock or Recenter mid-run and
+                    // getting nothing. Pause escapes it only because its own
+                    // opaque `.background` gives it a real shape.
                     Button {
                         isLocked = true
                     } label: {
                         Image(systemName: "lock.fill")
                             .frame(width: 48, height: 48)
+                            .contentShape(.circle)
                     }
                     .buttonStyle(.plain)
                     .paceGlassCircle()
@@ -159,6 +167,7 @@ struct LiveActivityView: View {
                     } label: {
                         Image(systemName: "location.fill")
                             .frame(width: 48, height: 48)
+                            .contentShape(.circle)
                     }
                     .buttonStyle(.plain)
                     .paceGlassCircle()

@@ -280,5 +280,6 @@ struct StepWidget: Widget {
 struct PaceUpWidgetBundle: WidgetBundle {
     var body: some Widget {
         StepWidget()
+        TerraWidget()
     }
 }

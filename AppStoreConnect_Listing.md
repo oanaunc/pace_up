@@ -9,7 +9,7 @@ Everything below is ready to paste into App Store Connect. Character limits are 
 | Field | Value |
 |---|---|
 | **App Name** (30 char max) | `Pace Up` |
-| **Subtitle** (30 char max) | `Step counter & run tracker` |
+| **Subtitle** (30 char max) | `Step tracker & exploration map` |
 | **Bundle ID** | `com.oanarinaldi.paceup` |
 | **SKU** | `paceup001` |
 | **Primary Category** | Health & Fitness |
@@ -18,53 +18,64 @@ Everything below is ready to paste into App Store Connect. Character limits are 
 | **Age Rating** | 4+ |
 | **Copyright** | `2026 Oana Rinaldi` |
 
-**One note on the name.** You picked the brand-only `Pace Up`, which is clean but spends none of the App Store's highest-weighted search field. The subtitle is also indexed, so the recommended subtitle above deliberately carries `step counter` and `run tracker` to recover most of that. Don't repeat those words in the keyword field — Apple indexes name, subtitle and keywords separately and duplicates are wasted characters.
+**Why the subtitle changed.** The previous recommendation was `Step counter & run tracker`, which is optimal ASO and the worst possible answer to a 4.3(a) rejection: it is the single most cloned phrase in Health & Fitness, and it is one of the few fields a spam reviewer reads before opening the app. The replacement keeps `step tracker` for indexing and spends the rest on the thing no other tracker in the category does.
+
+Read `Guideline_4.3a_Strategy.md` before submitting. The listing is the cheap half of the fix; the duplicate app pair on the developer account is the other half, and this listing does not address it.
 
 **Subtitle alternatives** (≤30 chars):
 
-- `Step counter & run tracker` ← recommended, 26 chars
-- `Walk, run & hike GPS tracker` — 28 chars, leads on walking
-- `Steps, runs & routes. Private.` — 30 chars, leads on the privacy angle
+- `Step tracker & exploration map` ← recommended, 30 chars
+- `Walk to uncover your own map` — 28 chars, leads hardest on Terra
+- `Steps, routes & a map to clear` — 30 chars, keeps `routes` indexed
+- `Private step & GPS tracker` — 26 chars, fallback if you decide Terra should not lead
 
 ---
 
 ## Promotional text (170 char max — editable anytime without review)
 
 ```
-Track your steps, runs, walks and hikes with a live GPS map. No account, no sign-up, no ads. Everything stays on your iPhone, and you decide what to keep.
+Your map starts dark. Every walk, run and hike you record clears a little more of it, permanently. Steps, routes and splits included. No account, no server, no ads.
 ```
 
 **Alternatives (≤170 chars):**
 
-- `A step counter and run tracker that asks for nothing. No account, no server, no ads. Your routes, splits and records live on your iPhone and nowhere else.`
-- `Steps, distance, pace, splits and elevation, on a live Apple map. Works with Apple Health. No sign-up, no subscription, no data collection.`
+- `Walk your city out of the fog. Pace Up tracks your steps and routes, and every metre you cover uncovers a map that only you can fill in. Nothing leaves your iPhone.`
+- `A tracker that never loses a run and never touches the network. Steps that match Health, routes on a live map, and a world map you uncover on foot.`
 
 ---
 
 ## Description (4000 char max)
 
 ```
-Pace Up is a private movement coach, step counter and GPS tracker for walks, runs, hikes and rides. Open it, choose your direction, and build a movement rhythm that fits real life. There's no account to create, because there's no server to create one on.
+Pace Up is a step counter and GPS tracker for walks, runs, hikes and rides. It has one thing no other tracker has: a map that starts dark.
 
-YOUR JOURNEY, NOT A GENERIC SCORE
-The Journey hub turns your recent activity into helpful weekly guidance. See your momentum, active days and distance together, then choose a structured path: prepare for your First 5K, make movement a Daily Reset, or build confidence for a Weekend Explorer adventure.
+TERRA — UNCOVER THE MAP ON FOOT
+Open Terra and the world is under fog. Every route you record clears the ground you actually moved through, and it stays cleared. Come back after a month and your city is the shape of the streets you know, drawn by your own feet. Terra counts what you have uncovered in square kilometres.
 
-YOUR DAY AT A GLANCE
-See your step count against your daily goal in one ring, with distance, calories and active time underneath. Steps come from Apple Health, so the number matches the Health app instead of arguing with it.
+It never shrinks. Clearing old GPS traces to save space does not re-darken a single metre — the ground you covered is yours. And Terra needs no connection of any kind; it is built entirely from routes already on your iPhone.
+
+Terra tells you where to go next, too: it finds the nearest ground you have never covered and points you at it — "new ground 800 m north-east, about 0.4 km² waiting there." Every run ends with how much of it was somewhere new. Your steps stop being a number and start being a place.
 
 RECORD WITH GPS
 Start a walk, run, hike or ride and watch your route draw itself on a live Apple map. Pace Up tracks distance, current and average pace, splits, elevation, steps and heart rate. Auto-pause stops the clock at traffic lights and picks it up again when you do. Recording keeps going with your phone locked or in your pocket.
 
-If your phone runs out of battery or iOS shuts the app down mid-run, Pace Up offers the run back the next time you open it. Nothing is written only to memory.
+IT DOES NOT LOSE YOUR RUN
+Every GPS point is written to disk the moment it arrives, not held in memory. If your battery dies or iOS shuts the app down mid-run, Pace Up offers the run back the next time you open it, route intact.
+
+STEPS THAT MATCH THE HEALTH APP
+Most trackers quietly double-count, adding your Apple Watch steps to your iPhone steps and handing you a number nobody walked. Pace Up counts in ten-minute buckets and takes exactly one source per bucket, so its totals agree with Health instead of arguing with it.
+
+YOUR DAY AT A GLANCE
+Your step count against your daily goal in one ring, with distance, calories and active time underneath. The Journey hub adds weekly guidance and three structured paths: First 5K, Daily Reset, or Weekend Explorer.
 
 SEE WHAT YOU DID
-Every activity gets a full breakdown: your route on the map, per-kilometre splits, a pace chart, an elevation profile and heart rate over time. Add a note, or just tap how it felt.
+Every activity gets a full breakdown: your route on the map, per-kilometre splits, a pace chart, an elevation profile and heart rate over time.
 
 PROGRESS THAT ADDS UP
-Weekly step, distance and active-time charts. Current and longest streaks. Personal records for your fastest 1K, 5K and 10K, your longest run and your biggest climb. Achievements from your first 5K to a million lifetime steps.
+Weekly step, distance and active-time charts. Current and longest streaks. Personal records for your fastest 1K, 5K and 10K, your longest run and your biggest climb.
 
 WIDGETS
-Small, medium and large Home Screen widgets showing your steps, goal progress, distance, calories and the last seven days.
+Small, medium and large Home Screen widgets showing your steps, goal progress, distance, calories and the last seven days — plus a Terra widget that puts the shape of everywhere you have walked on your Home Screen, with the step count that uncovered it.
 
 START FROM APPLE WATCH
 Start an outdoor walk, run, hike or ride from your wrist. See live time, heart rate and distance, pause or resume, then save the finished workout directly to Apple Health.
@@ -72,27 +83,27 @@ Start an outdoor walk, run, hike or ride from your wrist. See live time, heart r
 WORKS WITH APPLE HEALTH
 Pace Up reads steps, distance, heart rate and workouts from Apple Health, and writes your finished activities back as workouts with their routes. That means your history stays in Health even if you delete Pace Up.
 
-PRIVATE BY DESIGN
-No account. No sign-up. No server. No ads. No analytics. No in-app purchases. Pace Up makes no network requests at all — your routes and activities are stored on your iPhone and go nowhere else.
+NO NETWORK. NONE.
+Pace Up makes no network requests at all. No account, no sign-up, no server, no ads, no analytics, no in-app purchases, no third-party SDKs of any kind. Your routes, your records and your uncovered map are on your iPhone and nowhere else.
 
-You also decide how much to keep. Under Data & Privacy you can export everything as a readable backup file, export any route as GPX, or clear old GPS traces after 30 days while keeping your distances, times, splits, records and streaks intact. Nothing Pace Up deletes ever touches your Apple Health history.
+You also decide how much to keep. Under Data & Privacy you can export everything as a readable backup file, export any route as GPX, or clear old GPS traces after 30 days while keeping your distances, times, splits, records, streaks — and your Terra map — intact. Nothing Pace Up deletes ever touches your Apple Health history.
 
 Requires iOS 26 or later. Apple Watch workout recording requires watchOS 10 or later.
 
 Pace Up is a tracking tool, not medical advice. Step, distance, pace and calorie figures are estimates from consumer sensors.
 ```
 
-*(2,455 characters — comfortably inside the limit.)*
+*(3,923 characters of the 4,000 allowed. Re-count after any edit — this ran over the limit once already.)*
 
 ---
 
 ## Keywords (100 char max, comma-separated, no spaces after commas)
 
 ```
-pedometer,walking,running,gps,route,hiking,steps,distance,splits,elevation,workout,healthkit,cardio
+pedometer,walking,running,gps,route,hiking,explore,discovery,distance,splits,elevation,offline
 ```
 
-99 characters, no overlap with the name or subtitle. `pace`, `step counter`, `run` and `tracker` are all deliberately absent because Apple already indexes them from those two fields — repeating them here would waste characters. Don't add competitor names; Apple rejects for it.
+93 characters, no overlap with the name or subtitle. `pace`, `step`, `tracker` and `map` are deliberately absent because Apple already indexes them from the name and subtitle — repeating them here wastes characters. `explore`, `discovery` and `offline` are new: they are the terms a Terra user would actually search, and they pull the app out of the pedometer keyword cluster where every competitor sits. Don't add competitor names; Apple rejects for it.
 
 ---
 
@@ -164,6 +175,13 @@ Please grant both permissions when prompted:
 
 On a device with no Health data, the Today screen will legitimately show zeros. To exercise the GPS recorder, tap Start, choose Run, then tap START; with a simulated location route the map will draw a polyline and distance, pace and splits will populate.
 
+TERRA — THE FEATURE THAT DISTINGUISHES THIS APP
+Journey tab › the Terra card at the top. Terra is a world map covered in fog that clears only where the user has physically been. Each recorded route is folded into a grid of 100-metre squares and those squares are erased from the fog permanently, so the map becomes a record of the streets that person has actually walked, and the app reports the area uncovered in square kilometres.
+
+To see it during review: record one activity with a simulated location route as described above, save it, then open Journey › Terra. The corridor you just recorded will be clear and everything around it dark. Recording a second route in a different area and returning will show both.
+
+Terra is computed entirely on device from routes already stored locally. It makes no network requests, uses no map data beyond Apple's own tiles, and is not derived from any third-party service. It can be cleared at any time from Profile › Data & Privacy › Clear Terra Map, and is erased automatically when the user deletes all app data.
+
 BACKGROUND LOCATION — WHY IT IS USED
 Pace Up records the user's route during a walk, run, hike or ride. The location background mode is enabled only while an activity is actively recording, so tracking continues when the screen is off or the phone is in a pocket — the expected behaviour for a fitness tracker. iOS shows the blue status indicator for the entire recording. Location is never accessed outside an active recording. It is never transmitted anywhere: the app makes no network requests and there is no backend.
 
@@ -194,15 +212,22 @@ Suggested order, with caption ideas if you add text overlays:
 
 | # | Screen | Caption |
 |---|---|---|
-| 1 | Today — step ring at ~78% | *Your day, in one ring* |
+| 1 | **Terra — a city part-cleared, fog still on three sides** | *Walk your city out of the dark* |
 | 2 | Live run — map with route, distance and pace | *Watch your route draw itself* |
-| 3 | Activity detail — map + splits | *Every split, every metre* |
-| 4 | Activity detail — Charts tab, pace + elevation | *Pace, elevation and heart rate* |
-| 5 | Progress — weekly bars and streak | *Momentum you can see* |
-| 6 | Personal Records | *Your bests, kept forever* |
-| 7 | Data & Privacy | *No account. No server. Your data.* |
+| 3 | Today — step ring at ~78% | *Your day, in one ring* |
+| 4 | Activity detail — map + splits | *Every split, every metre* |
+| 5 | Activity detail — Charts tab, pace + elevation | *Pace, elevation and heart rate* |
+| 6 | Activity summary — the new-ground card | *How much of it was somewhere new* |
+| 7 | Home Screen with the Terra widget | *Your world, on your Home Screen* |
+| 8 | Recovery sheet — "Unfinished activity" | *It does not lose your run* |
+| 9 | Progress — weekly bars and streak | *Momentum you can see* |
+| 10 | Data & Privacy | *No account. No server. Your data.* |
 
-Screenshot 7 is worth including even though settings screens are usually dull — the privacy story is this app's actual differentiator in a category full of subscription trackers.
+**Screenshot 1 does the most work in this listing.** It is the only frame a browsing user or a spam reviewer cannot mistake for Strava, and it is the reason the description leads with Terra. Get it right: record several routes over a small area first so the cleared region has a recognisable shape with fog still visible around it. A fully cleared screen and an almost fully dark screen are both illegible — you want roughly a third uncovered.
+
+Screenshot 6 is unusual for a store listing but earns its place: crash recovery is a real engineering differentiator that no competitor advertises, and it reads instantly.
+
+Screenshot 9 is worth including even though settings screens are usually dull — the privacy story is this app's other real differentiator in a category full of subscription trackers.
 
 **App Preview video** is optional. Skip it for 1.0.
 

@@ -132,6 +132,48 @@ Ranked by how likely they are to bite on first build.
 4. **`MainActor.assumeIsolated`** in `LocationProvider`. Correct as long as `CLLocationManager` was created on the main thread, which it is. If it ever traps, replace with `DispatchQueue.main.async`.
 5. **Swift language mode.** Targets are set to Swift 5 with `SWIFT_STRICT_CONCURRENCY = minimal` deliberately. Switching to Swift 6 will surface a number of actor-isolation errors around `AppSettings.shared` and `HealthKitManager.shared` that are warnings today.
 
+### Terra (`ExploreMapView.swift`) — unverified against a compiler
+
+The grid maths and the binary codec were tested by porting them and checking the
+output — cell size holds at ~100 m from the equator to 78° N, a straight 1 km line
+produces 11 contiguous cells with no gaps, the floored division matches `floor` across
+the range, and the codec round-trips and degrades safely when truncated. The SwiftUI
+layer was not compiled. Watch these:
+
+6. **`MapProxy.convert(_:to:)`** returning nil, or `.local` not resolving as the
+   coordinate space. Everything Terra draws depends on it. If it fails, the fallback is
+   an `MKMapView` in a `UIViewRepresentable` with a custom `MKOverlayRenderer`, which is
+   more code but the officially supported path for overlay drawing.
+7. **`.destinationOut` inside `Canvas`.** The fog is punched out by blending, and blend
+   modes need their own compositing layer. `.compositingGroup()` is already on the
+   canvas; if the map itself gets erased along with the fog, wrap the fills in
+   `context.drawLayer { }` instead.
+8. **Two cadences through one `onMapCameraChange`.** `MKCoordinateRegion` is not
+   `Equatable`, so the culling threshold is checked by hand inside the continuous
+   handler. If panning feels like it is dragging, raise the 0.25 span fraction in
+   `shouldRebuildCellList`.
+9. **First-launch fold.** A user with hundreds of stored activities folds all of them the
+   first time Journey appears. It yields between activities, but this is the one path
+   worth watching on a real device with real history.
+10. **`TerraWidget.swift` target membership.** It lives in `PaceUpWidgets/`, so the
+    synchronized group should pick it up — verify it is in the widget target and *not*
+    the app target, or `@main` will see two widget bundles.
+11. **`TerraWidgetSnapshot` must mirror `TerraSnapshot`.** Same deliberate duplication as
+    `SharedSnapshot.swift`. If the app's field names change, change them here too; the
+    decoder returns nil on mismatch and the widget silently shows its placeholder, which
+    looks like working software.
+
+### What was verified without a compiler
+
+Ported to Python and tested: cell size holds at ~100 m from the equator to 78° N; a
+straight 1 km line yields 11 contiguous cells with no gaps; floored division matches
+`floor` across the range; the PUX2 codec round-trips and, across 709 truncation points,
+never invents a cell, ID or explorer day; the widget bitmap maps every cell to a set pixel,
+stays inside 64 × 64 even for a history spanning continents, and puts north at row 0;
+all eight compass bearings resolve correctly; and the frontier search finds ground just
+past the edge of explored territory while correctly ignoring a single skipped square in
+the middle of it.
+
 ---
 
 ## What you cannot test in the simulator

@@ -95,7 +95,10 @@ struct MovementPlanView: View {
                     Text("\(session.duration) · \(session.detail)").font(.subheadline).foregroundStyle(.paceTextSecondary)
                 }
                 Spacer()
-            }.padding(PaceSpacing.m).paceGlassCard(cornerRadius: PaceRadius.tile)
+            // The row is mostly `Spacer()`, which renders nothing and so hit-tests
+            // as nothing. Tapping the empty right-hand half of a session row has
+            // to toggle it like the left-hand half does.
+            }.padding(PaceSpacing.m).contentShape(.rect).paceGlassCard(cornerRadius: PaceRadius.tile)
         }.buttonStyle(.plain).accessibilityHint(isActive ? "Marks this session complete or incomplete" : "Activate the plan to track this session")
     }
 

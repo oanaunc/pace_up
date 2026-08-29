@@ -18,9 +18,35 @@ struct TodaysMapView: View {
     @State private var camera: MapCameraPosition = .automatic
     @State private var followTrigger = 0
     @State private var showsList = false
+    @State private var currentRegion: MKCoordinateRegion?
+
+    /// Every route recorded today, not just the first one found.
+    ///
+    /// This screen is called Today's Map. Showing one of three walks — which is
+    /// what `first(where:)` did — is a bug the user can only notice by knowing
+    /// what is missing.
+    private var routes: [[CLLocationCoordinate2D]] {
+        activities
+            .filter(\.hasRoute)
+            .map(\.thumbnailCoordinates)
+            .filter { !$0.isEmpty }
+    }
 
     private var coordinates: [CLLocationCoordinate2D] {
-        activities.first(where: { $0.hasRoute })?.thumbnailCoordinates ?? []
+        routes.flatMap { $0 }
+    }
+
+    /// Halves the visible span, with a floor so repeated taps cannot zoom past
+    /// what MapKit will render.
+    private func zoomIn() {
+        guard let region = currentRegion else { return }
+        let span = MKCoordinateSpan(
+            latitudeDelta: max(region.span.latitudeDelta / 2, 0.0005),
+            longitudeDelta: max(region.span.longitudeDelta / 2, 0.0005)
+        )
+        withAnimation(.easeInOut(duration: 0.4)) {
+            camera = .region(MKCoordinateRegion(center: region.center, span: span))
+        }
     }
 
     private var totalDistance: Double {
@@ -43,11 +69,12 @@ struct TodaysMapView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             RouteMapView(
-                coordinates: coordinates,
+                routes: routes,
                 style: style,
                 showsUserLocation: true,
                 showsControls: true,
                 followTrigger: followTrigger,
+                onRegionChange: { currentRegion = $0 },
                 cameraPosition: $camera
             )
             .ignoresSafeArea()
@@ -103,15 +130,21 @@ struct TodaysMapView: View {
                     size: 40
                 )
                 Spacer()
-                Button {
-                    followTrigger += 1
-                } label: {
+                // Was a second Recenter wearing a zoom icon: it incremented the
+                // same `followTrigger` as the button below, so pressing it after
+                // the map was already framed did nothing at all. A plus on a map
+                // means zoom in, so it now zooms in — and "Fit Route" is the way
+                // back out.
+                Button(action: zoomIn) {
                     Image(systemName: "plus")
                         .font(.subheadline.weight(.semibold))
                         .frame(width: 34, height: 34)
+                        .contentShape(.circle)
                 }
                 .buttonStyle(.plain)
                 .paceGlassCircle()
+                .disabled(currentRegion == nil)
+                .opacity(currentRegion == nil ? 0.4 : 1)
             }
 
             HStack(spacing: 0) {
@@ -123,12 +156,21 @@ struct TodaysMapView: View {
                 MetricColumn(value: PaceFormat.steps(totalSteps), caption: String(localized: "Steps"))
             }
 
+            // Every label carries an explicit `contentShape`. The glass is
+            // applied by a modifier *outside* the Button, so without one the
+            // hit area is the SF Symbol's own glyph — a tap anywhere on the
+            // visible circle lands on the map instead, and the control reads
+            // as dead. The same fix is already present on the glass controls
+            // in LiveActivityView and TodayView.
             HStack(spacing: PaceSpacing.m) {
                 Button {
-                    camera = .userLocation(fallback: .automatic)
+                    withAnimation(.easeInOut(duration: 0.6)) {
+                        camera = .userLocation(fallback: .automatic)
+                    }
                 } label: {
                     Image(systemName: "location.fill")
                         .frame(width: 44, height: 44)
+                        .contentShape(.circle)
                 }
                 .buttonStyle(.plain)
                 .paceGlassCircle()
@@ -136,10 +178,11 @@ struct TodaysMapView: View {
                 Button {
                     followTrigger += 1
                 } label: {
-                    Text("Recenter")
+                    Text(coordinates.isEmpty ? "My Location" : "Fit Route")
                         .font(.subheadline.weight(.medium))
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
+                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .paceGlassControl(cornerRadius: 22)
@@ -149,9 +192,12 @@ struct TodaysMapView: View {
                 } label: {
                     Image(systemName: "list.bullet")
                         .frame(width: 44, height: 44)
+                        .contentShape(.circle)
                 }
                 .buttonStyle(.plain)
                 .paceGlassCircle()
+                .disabled(activities.isEmpty)
+                .opacity(activities.isEmpty ? 0.4 : 1)
             }
         }
         .padding(PaceSpacing.l)

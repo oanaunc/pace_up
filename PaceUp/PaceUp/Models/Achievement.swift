@@ -29,6 +29,10 @@ enum AchievementKind: String, CaseIterable, Codable, Identifiable, Sendable {
     case elevation500
     case tenActivities
     case fiftyActivities
+    case terra1
+    case terra10
+    case terra50
+    case explorerStreak7
 
     var id: String { rawValue }
 
@@ -50,6 +54,10 @@ enum AchievementKind: String, CaseIterable, Codable, Identifiable, Sendable {
         case .elevation500:       return String(localized: "Climber")
         case .tenActivities:      return String(localized: "Getting Going")
         case .fiftyActivities:    return String(localized: "Fifty Up")
+        case .terra1:             return String(localized: "First Ground")
+        case .terra10:            return String(localized: "Cartographer")
+        case .terra50:            return String(localized: "Surveyor")
+        case .explorerStreak7:    return String(localized: "Always Somewhere New")
         }
     }
 
@@ -71,6 +79,10 @@ enum AchievementKind: String, CaseIterable, Codable, Identifiable, Sendable {
         case .elevation500:       return String(localized: "Climb 500 metres in one activity")
         case .tenActivities:      return String(localized: "Complete 10 activities")
         case .fiftyActivities:    return String(localized: "Complete 50 activities")
+        case .terra1:             return String(localized: "Uncover 1 km² on Terra")
+        case .terra10:            return String(localized: "Uncover 10 km² on Terra")
+        case .terra50:            return String(localized: "Uncover 50 km² on Terra")
+        case .explorerStreak7:    return String(localized: "Find new ground 7 days in a row")
         }
     }
 
@@ -92,6 +104,10 @@ enum AchievementKind: String, CaseIterable, Codable, Identifiable, Sendable {
             return "mountain.2.fill"
         case .tenActivities, .fiftyActivities:
             return "checkmark.seal.fill"
+        case .terra1, .terra10, .terra50:
+            return "square.grid.3x3.fill"
+        case .explorerStreak7:
+            return "signpost.right.fill"
         }
     }
 
@@ -106,6 +122,8 @@ enum AchievementKind: String, CaseIterable, Codable, Identifiable, Sendable {
         case .nightOwl:                                                return .paceViolet
         case .elevation500:                                            return .paceMint
         case .tenActivities, .fiftyActivities:                         return .paceLime
+        case .terra1, .terra10, .terra50:                              return .paceLime
+        case .explorerStreak7:                                         return .paceCyan
         }
     }
 
