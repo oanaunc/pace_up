@@ -8,6 +8,7 @@ import SwiftData
 
 enum AppTab: Hashable {
     case today
+    case journal
     case journey
     case start
     case progress
@@ -41,14 +42,16 @@ struct RootTabView: View {
             Tab(String(localized: "Today"), systemImage: "sun.max.fill", value: AppTab.today) {
                 TodayView()
             }
-            Tab(String(localized: "Journey"), systemImage: "map.fill", value: AppTab.journey) {
-                JourneyView()
+            // Journal sits next to Today on purpose: waymarks are what Pace Up
+            // is for, and the tracker exists to bring you back to them.
+            Tab(String(localized: "Journal"), systemImage: "mappin.and.ellipse", value: AppTab.journal) {
+                JournalTab()
             }
             Tab(String(localized: "Start"), systemImage: "record.circle", value: AppTab.start) {
                 StartActivityView()
             }
-            Tab(String(localized: "Progress"), systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
-                ProgressDashboardView()
+            Tab(String(localized: "Journey"), systemImage: "map.fill", value: AppTab.journey) {
+                JourneyView()
             }
             Tab(String(localized: "Profile"), systemImage: "person.fill", value: AppTab.profile) {
                 ProfileView()

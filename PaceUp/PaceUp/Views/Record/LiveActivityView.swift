@@ -8,18 +8,22 @@
 //
 
 import SwiftUI
+import SwiftData
 import MapKit
 
 struct LiveActivityView: View {
 
     @Environment(ActivityRecorder.self) private var recorder
     @Environment(AppSettings.self) private var settings
+    @Environment(WaymarkMonitor.self) private var waymarks
 
     @State private var camera: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var isLocked = false
     @State private var showsDiscardConfirmation = false
     @State private var followTrigger = 0
     @State private var mapStyle: PaceMapStyle = .standard
+    @State private var showsComposer = false
+    @Query private var allWaymarks: [Waymark]
 
     private var isPaused: Bool { recorder.state == .paused }
 
@@ -34,6 +38,7 @@ struct LiveActivityView: View {
                 followTrigger: followTrigger,
                 cameraPosition: $camera
             )
+            .withWaymarkPins(allWaymarks.prefix(200).map { WaymarkPinData($0) })
             .ignoresSafeArea()
 
             VStack(spacing: PaceSpacing.m) {
@@ -46,6 +51,32 @@ struct LiveActivityView: View {
 
             if isLocked {
                 lockOverlay
+            }
+
+            // A waymark coming back takes the top of the screen, above the
+            // lock overlay: it is worth reading even with the screen locked.
+            if let encounter = waymarks.current {
+                VStack {
+                    WaymarkEncounterView(encounter: encounter) {
+                        withAnimation(.snappy) { waymarks.dismissCurrent() }
+                    }
+                    .id(encounter.id)
+                    .padding(.horizontal, PaceSpacing.l)
+                    .padding(.top, PaceSpacing.xl)
+                    Spacer()
+                }
+            }
+        }
+        .animation(.spring(duration: 0.5, bounce: 0.25), value: waymarks.current)
+        .sheet(isPresented: $showsComposer) {
+            if let location = recorder.lastLocation {
+                WaymarkComposerView(
+                    coordinate: location.coordinate,
+                    sessionID: recorder.currentSessionID,
+                    activityType: recorder.activityType
+                ) { waymark in
+                    waymarks.noteDropped(waymark)
+                }
             }
         }
         .statusBarHidden(false)
@@ -84,6 +115,31 @@ struct LiveActivityView: View {
             }
 
             Spacer()
+
+            Button {
+                showsComposer = true
+            } label: {
+                Label(String(localized: "Waymark"), systemImage: "mappin.and.ellipse")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.paceInk)
+                    .padding(.horizontal, 14)
+                    .frame(height: 40)
+                    .background(Color.paceLime, in: .capsule)
+                    .overlay(alignment: .topTrailing) {
+                        if !waymarks.droppedThisSession.isEmpty {
+                            Text("\(waymarks.droppedThisSession.count)")
+                                .font(.caption2.bold())
+                                .foregroundStyle(.white)
+                                .frame(width: 18, height: 18)
+                                .background(Color.paceViolet, in: .circle)
+                                .offset(x: 6, y: -6)
+                        }
+                    }
+            }
+            .buttonStyle(.plain)
+            .disabled(recorder.lastLocation == nil)
+            .accessibilityLabel(String(localized: "Leave a waymark here"))
+            .accessibilityHint(String(localized: "Pins a note, photo, voice memo or time capsule to where you are standing"))
 
             Menu {
                 Picker(String(localized: "Map Style"), selection: $mapStyle) {

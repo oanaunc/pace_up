@@ -35,8 +35,7 @@ struct JourneyView: View {
 
     private var hero: some View {
         ZStack(alignment: .bottomLeading) {
-            Image("MovementDawn")
-                .resizable().scaledToFill()
+            FillImage(image: Image("MovementDawn"))
                 .frame(height: 220).clipped()
             LinearGradient(colors: [.clear, .paceInk.opacity(0.92)], startPoint: .top, endPoint: .bottom)
             VStack(alignment: .leading, spacing: 6) {
@@ -149,6 +148,7 @@ struct JourneyView: View {
         VStack(alignment: .leading, spacing: PaceSpacing.m) {
             SectionHeader(title: "Your movement library")
             HStack(spacing: PaceSpacing.s) {
+                JourneyLink(title: "Progress", symbol: "chart.line.uptrend.xyaxis", destination: AnyView(ProgressDashboardView()))
                 JourneyLink(title: "History", symbol: "clock.arrow.circlepath", destination: AnyView(ActivityListView()))
                 JourneyLink(title: "Records", symbol: "trophy.fill", destination: AnyView(PersonalRecordsView()))
                 JourneyLink(title: "Badges", symbol: "medal.fill", destination: AnyView(AchievementsView()))

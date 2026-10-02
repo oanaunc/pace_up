@@ -50,6 +50,16 @@
             ReferencedContainer = "container:PaceUp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <LocationScenarioReference
+         identifier = "PaceUp/Resources/Cismigiu.gpx"
+         referenceType = "0">
+      </LocationScenarioReference>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-PaceUpDemoWaymarks YES"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

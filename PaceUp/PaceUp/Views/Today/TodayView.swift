@@ -18,6 +18,9 @@ struct TodayView: View {
 
     @State private var showsMap = false
 
+    @Query(sort: \Waymark.createdAt, order: .reverse)
+    private var waymarks: [Waymark]
+
     private var todaysActivities: [Activity] {
         activities.filter { Calendar.current.isDateInToday($0.startDate) }
     }
@@ -36,15 +39,17 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: PaceSpacing.l) {
+                    // Memories first. Steps are still here, but they are the
+                    // supporting cast: Pace Up is a walking journal, and the
+                    // first thing it shows is what is waiting for you out there.
                     greeting
-                    ringCard
-                    dailyInvitation
-                    goalNudge
+                    memoryLaneCard
+                    capsuleStrip
+                    compactStepCard
                     movementCard
                     if !todaysActivities.isEmpty {
                         todaysActivityList
                     }
-                    motivationCard
                 }
                 .padding(.horizontal, PaceSpacing.l)
                 .padding(.bottom, 100)
@@ -52,7 +57,7 @@ struct TodayView: View {
             .background {
                 ZStack(alignment: .top) {
                     Color.paceInk
-                    Image("MovementDawn").resizable().scaledToFill().frame(height: 330).clipped().opacity(0.28)
+                    FillImage(image: Image("WaymarkHero")).frame(height: 330).clipped().opacity(0.30)
                     LinearGradient(colors: [.clear, .paceInk.opacity(0.72), .paceInk], startPoint: .top, endPoint: .bottom).frame(height: 380)
                 }.ignoresSafeArea()
             }
@@ -143,6 +148,175 @@ struct TodayView: View {
     private var goalProgress: Double {
         guard settings.dailyStepGoal > 0 else { return 0 }
         return min(Double(health.todaySteps) / Double(settings.dailyStepGoal), 1)
+    }
+
+    // MARK: Memory lane
+
+    private var memoryLaneCard: some View {
+        NavigationLink {
+            JournalScreen()
+        } label: {
+            ZStack(alignment: .bottomLeading) {
+                Group {
+                    if let data = onThisDay?.photoData, let image = UIImage(data: data) {
+                        FillImage(image: Image(uiImage: image))
+                    } else {
+                        FillImage(image: Image("MemoryLane"))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 260)
+                .clipped()
+
+                LinearGradient(colors: [.clear, .paceInk.opacity(0.4), .paceInk.opacity(0.97)],
+                               startPoint: .top, endPoint: .bottom)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(memoryLaneEyebrow.uppercased(), systemImage: onThisDay != nil ? "sparkles" : "mappin.and.ellipse")
+                        .font(.caption.bold())
+                        .tracking(1.4)
+                        .foregroundStyle(capsulesReady > 0 && onThisDay == nil ? .paceAmber : .paceLime)
+                    Text(memoryLaneTitle)
+                        .font(.title2.bold())
+                        .multilineTextAlignment(.leading)
+                    Text(memoryLaneSubtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.paceTextSecondary)
+                        .multilineTextAlignment(.leading)
+                    HStack(spacing: 6) {
+                        Text(waymarks.isEmpty ? "How it works" : "Open your journal")
+                        Image(systemName: "arrow.right")
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.paceLime)
+                    .padding(.top, 4)
+                }
+                .padding(PaceSpacing.l)
+            }
+            .clipShape(.rect(cornerRadius: PaceRadius.card))
+            .overlay { RoundedRectangle(cornerRadius: PaceRadius.card).stroke(Color.white.opacity(0.1)) }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Sealed capsules counting down, and any that are ready to be walked
+    /// back to. Hidden when there are none.
+    @ViewBuilder
+    private var capsuleStrip: some View {
+        let capsules = waymarks
+            .filter { $0.isSealed() || $0.isWaitingToBeOpened() }
+            .sorted { ($0.sealedUntil ?? .distantPast) < ($1.sealedUntil ?? .distantPast) }
+        if !capsules.isEmpty {
+            VStack(alignment: .leading, spacing: PaceSpacing.s) {
+                SectionHeader(title: String(localized: "Time capsules"))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: PaceSpacing.s) {
+                        ForEach(capsules.prefix(8)) { capsule in
+                            NavigationLink {
+                                WaymarkDetailView(waymark: capsule)
+                            } label: {
+                                capsuleTile(capsule)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func capsuleTile(_ capsule: Waymark) -> some View {
+        let ready = capsule.isWaitingToBeOpened()
+        let days = capsule.sealedUntil.map {
+            max(0, Calendar.current.dateComponents([.day], from: .now, to: $0).day ?? 0)
+        } ?? 0
+        return VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: ready ? "envelope.open.fill" : "lock.fill")
+                .foregroundStyle(ready ? .paceAmber : .paceViolet)
+            Text(ready ? String(localized: "Ready") : String(localized: "\(days) days"))
+                .font(.title3.bold().monospacedDigit())
+            Text(capsule.addressedTo.map { String(localized: "To \($0)") } ?? String(localized: "Time capsule"))
+                .font(.caption)
+                .foregroundStyle(.paceTextSecondary)
+                .lineLimit(1)
+        }
+        .frame(width: 128, alignment: .leading)
+        .padding(PaceSpacing.m)
+        .background((ready ? Color.paceAmber : Color.paceViolet).opacity(0.10), in: .rect(cornerRadius: PaceRadius.tile))
+        .overlay {
+            RoundedRectangle(cornerRadius: PaceRadius.tile)
+                .stroke((ready ? Color.paceAmber : Color.paceViolet).opacity(0.25))
+        }
+    }
+
+    /// Steps, kept but demoted to a single compact row.
+    private var compactStepCard: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: PaceSpacing.l) {
+                ProgressRing(progress: goalProgress, lineWidth: 9) {
+                    Text("\(Int(goalProgress * 100))%")
+                        .font(.caption.bold().monospacedDigit())
+                }
+                .frame(width: 70, height: 70)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(PaceFormat.steps(health.todaySteps))
+                        .font(.title2.bold().monospacedDigit())
+                        .contentTransition(.numericText())
+                    Text(remainingSteps > 0
+                         ? String(localized: "steps · \(PaceFormat.steps(remainingSteps)) to go")
+                         : String(localized: "steps · goal reached"))
+                        .font(.caption)
+                        .foregroundStyle(.paceTextSecondary)
+                }
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("\(PaceFormat.distanceValue(health.todayDistance, units: settings.units)) \(settings.units.distanceAbbreviation)")
+                    Text("\(PaceFormat.energy(health.todayActiveEnergy)) kcal")
+                }
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.paceTextSecondary)
+            }
+            .padding(PaceSpacing.l)
+
+            if health.authorizationState != .authorized {
+                healthPrompt
+            }
+        }
+        .paceGlassCard()
+    }
+
+    private var onThisDay: Waymark? {
+        let calendar = Calendar.current
+        let today = calendar.dateComponents([.month, .day, .year], from: .now)
+        return waymarks.first {
+            let c = calendar.dateComponents([.month, .day, .year], from: $0.createdAt)
+            return c.month == today.month && c.day == today.day && c.year != today.year && $0.isReadable()
+        }
+    }
+
+    private var capsulesReady: Int { waymarks.filter { $0.isWaitingToBeOpened() }.count }
+
+    private var memoryLaneEyebrow: String {
+        if onThisDay != nil { return String(localized: "On this day") }
+        if capsulesReady > 0 { return String(localized: "Capsules unlocked") }
+        return String(localized: "Memory lane")
+    }
+
+    private var memoryLaneTitle: String {
+        if let memory = onThisDay { return memory.title }
+        if capsulesReady > 0 { return String(localized: "\(capsulesReady) capsule\(capsulesReady == 1 ? "" : "s") waiting for you") }
+        if waymarks.isEmpty { return String(localized: "Leave a memory on today's walk") }
+        return String(localized: "\(waymarks.count) memories out there")
+    }
+
+    private var memoryLaneSubtitle: String {
+        if let memory = onThisDay {
+            return String(localized: "You left this \(WaymarkFormat.ago(memory.createdAt)). Walk back and it will find you.")
+        }
+        if capsulesReady > 0 { return String(localized: "Their dates have come. Walk back to where you sealed them to open.") }
+        if waymarks.isEmpty { return String(localized: "Pin a note, photo or voice memo to a place. It comes back when you do.") }
+        return String(localized: "Take a route past one of them today.")
     }
 
     private var dailyInvitation: some View {

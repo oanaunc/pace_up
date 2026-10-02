@@ -31,8 +31,10 @@ struct ProgressDashboardView: View {
 
     private var stats: StatsService { StatsService(context: context) }
 
+    // Pushed from Journey since the Journal took its tab, so it lives inside
+    // that tab's navigation stack rather than owning one.
     var body: some View {
-        NavigationStack {
+        Group {
             ScrollView {
                 VStack(spacing: PaceSpacing.l) {
                     pageIntro

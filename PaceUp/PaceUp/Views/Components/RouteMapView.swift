@@ -62,6 +62,9 @@ struct RouteMapView: View {
     /// Called as the camera moves, so an owner can offer zoom controls without
     /// keeping its own copy of MapKit's state.
     var onRegionChange: ((MKCoordinateRegion) -> Void)?
+    /// Waymarks to pin on the map. Set by the live screen so memories along
+    /// the way are visible before you reach them.
+    var waymarkPins: [WaymarkPinData] = []
 
     @Binding var cameraPosition: MapCameraPosition
 
@@ -140,6 +143,13 @@ struct RouteMapView: View {
                 }
             }
 
+            ForEach(waymarkPins) { pin in
+                Annotation("", coordinate: pin.coordinate, anchor: .center) {
+                    WaymarkPin(kind: pin.kind, isSealed: pin.isSealed, isWaiting: pin.isWaiting)
+                        .scaleEffect(0.8)
+                }
+            }
+
             if showsUserLocation {
                 UserAnnotation()
             }
@@ -215,5 +225,36 @@ struct StaticRouteMap: View {
             cameraPosition: $position
         )
         .allowsHitTesting(false)
+    }
+}
+
+
+extension RouteMapView {
+    func withWaymarkPins(_ pins: [WaymarkPinData]) -> RouteMapView {
+        var copy = self
+        copy.waymarkPins = pins
+        return copy
+    }
+}
+
+/// Value copy of what a map pin needs, so map views never hold SwiftData
+/// objects across renders.
+struct WaymarkPinData: Identifiable, Equatable {
+    var id: UUID
+    var coordinate: CLLocationCoordinate2D
+    var kind: WaymarkKind
+    var isSealed: Bool
+    var isWaiting: Bool
+
+    init(_ waymark: Waymark, now: Date = .now) {
+        id = waymark.id
+        coordinate = waymark.coordinate
+        kind = waymark.kind
+        isSealed = waymark.isSealed(at: now)
+        isWaiting = waymark.isWaitingToBeOpened(at: now)
+    }
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.isSealed == rhs.isSealed && lhs.isWaiting == rhs.isWaiting
     }
 }

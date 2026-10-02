@@ -17,7 +17,8 @@ enum PaceUpStore {
     static let schema = Schema([
         Activity.self,
         ActivityDetail.self,
-        AchievementUnlock.self
+        AchievementUnlock.self,
+        Waymark.self
     ])
 
     /// The production container, backed by the App Group.

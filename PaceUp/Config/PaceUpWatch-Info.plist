@@ -5,6 +5,7 @@
 <key>WKCompanionAppBundleIdentifier</key><string>com.oanarinaldi.paceup</string>
 <key>WKBackgroundModes</key>
 <array><string>workout-processing</string></array>
+<key>NSLocationWhenInUseUsageDescription</key><string>Pace Up uses your location during a workout to tap you when you pass a waymark you left, to pin new ones, and to point the way to the nearest memory.</string>
 <key>NSHealthShareUsageDescription</key><string>Pace Up reads live heart rate and distance to show your workout progress.</string>
 <key>NSHealthUpdateUsageDescription</key><string>Pace Up saves workouts started from Apple Watch to Apple Health.</string>
 </dict></plist>

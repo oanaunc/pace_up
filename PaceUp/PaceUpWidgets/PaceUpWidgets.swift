@@ -281,5 +281,6 @@ struct PaceUpWidgetBundle: WidgetBundle {
     var body: some Widget {
         StepWidget()
         TerraWidget()
+        MemoryLaneWidget()
     }
 }

@@ -174,6 +174,8 @@ struct DataPrivacyView: View {
         // asked for everything to go would be the one place the app kept a
         // record of where they had been.
         ExplorationStore.shared.reset()
+        // Waymarks are pinned to places, so they are location history too.
+        WaymarkStore(context: context).deleteAll()
         alertMessage = String(localized: "All Pace Up data deleted.")
     }
 }
@@ -294,7 +296,7 @@ private struct DangerSection: View {
         } header: {
             Text("Danger zone")
         } footer: {
-            Text("Unlike the cleanup above, these remove entire activities. Lifetime totals, streaks and personal records for the deleted period will be lost. Clearing Terra re-darkens the map without touching your activities; it will refill from any activities you still have. None of these touch Apple Health.")
+            Text("Unlike the cleanup above, these remove entire activities. Lifetime totals, streaks and personal records for the deleted period will be lost. Clearing Terra re-darkens the map without touching your activities; it will refill from any activities you still have. Delete All also removes every waymark, photo, voice memo and time capsule. None of these touch Apple Health.")
         }
     }
 }

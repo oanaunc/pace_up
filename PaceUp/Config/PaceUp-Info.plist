@@ -57,6 +57,10 @@
 	<string>Pace Up uses your location to record the route, distance and pace of your walks, runs and hikes. Tracking only happens while an activity is running.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Pace Up keeps recording your route while an activity is running and your phone is in your pocket or the screen is off.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Pace Up lets you take a photo and pin it as a waymark to the place you are standing. Photos stay on your iPhone.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Pace Up records short voice memos that you pin as waymarks to a place. Memos stay on your iPhone.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Pace Up reads step and motion data to count your steps during an activity.</string>
 	<key>NSHealthShareUsageDescription</key>

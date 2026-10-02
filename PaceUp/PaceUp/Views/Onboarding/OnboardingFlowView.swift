@@ -31,18 +31,20 @@ struct OnboardingFlowView: View {
             TabView(selection: $page) {
                 WelcomeView { withAnimation { page = 1 } }
                     .tag(0)
-                GoalSetupView { withAnimation { page = 2 } }
+                WaymarksIntroView { withAnimation { page = 2 } }
                     .tag(1)
+                GoalSetupView { withAnimation { page = 3 } }
+                    .tag(2)
                 ConnectHealthView {
                     settings.hasCompletedOnboarding = true
                 }
-                .tag(2)
+                .tag(3)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
             VStack {
                 Spacer()
-                PageDots(count: 3, current: page)
+                PageDots(count: 4, current: page)
                     .padding(.bottom, 14)
             }
         }
@@ -60,7 +62,7 @@ struct WelcomeView: View {
 
             VStack(spacing: PaceSpacing.m) {
                 LogoWordmark()
-                Text("Every step\nmoves you forward.")
+                Text("Leave memories where they happened.\nWalk back, and they find you.")
                     .font(.subheadline)
                     .foregroundStyle(.paceTextSecondary)
                     .multilineTextAlignment(.center)
@@ -78,6 +80,55 @@ struct WelcomeView: View {
             }
             .padding(.horizontal, PaceSpacing.xl)
             .padding(.bottom, 60)
+        }
+    }
+}
+
+// MARK: - Waymarks
+
+/// The concept page. Pace Up is a walking journal first; the tracker exists to
+/// bring people back to the places they marked.
+struct WaymarksIntroView: View {
+    var onContinue: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
+                FillImage(image: Image("WaymarkOnboarding"))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 380)
+                    .clipped()
+                LinearGradient(colors: [.clear, .paceInk], startPoint: .center, endPoint: .bottom)
+            }
+            .ignoresSafeArea(edges: .top)
+
+            VStack(alignment: .leading, spacing: PaceSpacing.l) {
+                Text("Your walks remember")
+                    .font(.largeTitle.bold())
+                row("mappin.and.ellipse", "Drop a waymark", "Pin a note, photo or voice memo to the exact spot, mid-walk.")
+                row("applewatch.radiowaves.left.and.right", "It finds you again", "Pass that spot months later and your iPhone or Apple Watch taps you with it.")
+                row("envelope.badge.fill", "Seal time capsules", "Write to future you. It opens on its date — and only where you left it.")
+            }
+            .padding(.horizontal, PaceSpacing.xl)
+
+            Spacer()
+
+            PrimaryButton(title: String(localized: "Continue"), action: onContinue)
+                .padding(.horizontal, PaceSpacing.xl)
+                .padding(.bottom, 60)
+        }
+    }
+
+    private func row(_ symbol: String, _ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
+        HStack(alignment: .top, spacing: PaceSpacing.m) {
+            Image(systemName: symbol)
+                .font(.title3)
+                .foregroundStyle(.paceLime)
+                .frame(width: 32)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.headline)
+                Text(detail).font(.subheadline).foregroundStyle(.paceTextSecondary)
+            }
         }
     }
 }

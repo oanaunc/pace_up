@@ -14,6 +14,7 @@ struct PaceUpApp: App {
     @State private var settings = AppSettings.shared
     @State private var health = HealthKitManager.shared
     @State private var recorder = ActivityRecorder()
+    @State private var waymarks = WaymarkMonitor.shared
 
     private let container = PaceUpStore.makeContainer()
 
@@ -25,6 +26,8 @@ struct PaceUpApp: App {
                 .environment(settings)
                 .environment(health)
                 .environment(recorder)
+                .environment(waymarks)
+                .task { connectWaymarks() }
                 // The comps are dark throughout, and the map, route gradient
                 // and glass materials are all tuned for a dark backdrop.
                 .preferredColorScheme(.dark)
@@ -35,6 +38,22 @@ struct PaceUpApp: App {
             guard phase == .active else { return }
             Task { await onForeground() }
         }
+    }
+
+    /// Waymarks ride on the recorder: every accepted fix is checked against
+    /// them, in the foreground or with the phone in a pocket.
+    @MainActor
+    private func connectWaymarks() {
+        let context = container.mainContext
+        waymarks.configure(context: context)
+        WaymarkSync.shared.activate(context: context)
+        let monitor = waymarks
+        recorder.onSessionStart = { id in monitor.beginSession(id) }
+        recorder.onAcceptedLocation = { location in monitor.evaluate(location) }
+        #if DEBUG
+        WaymarkDemoSeed.seedIfRequested(context: context)
+        #endif
+        WaymarkStore(context: context).didChange()
     }
 
     @MainActor

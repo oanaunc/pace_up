@@ -20,6 +20,7 @@ struct ActivitySummaryView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(HealthKitManager.self) private var health
     @Environment(\.modelContext) private var context
+    @Environment(WaymarkMonitor.self) private var waymarks
 
     @State private var title: String = ""
     @State private var note: String = ""
@@ -53,6 +54,9 @@ struct ActivitySummaryView: View {
                         if finished.points.count > 1 {
                             routeCard
                             newGroundCard
+                        }
+                        if !waymarks.droppedThisSession.isEmpty || !waymarks.encounteredThisSession.isEmpty {
+                            waymarkCard
                         }
                         feelingPicker
                         if showsNoteField { noteField.id(Self.noteAnchor) }
@@ -168,6 +172,39 @@ struct ActivitySummaryView: View {
             .frame(height: 150)
             .padding(PaceSpacing.l)
             .paceGlassCard()
+    }
+
+    /// What this outing left behind and what it found.
+    private var waymarkCard: some View {
+        let left = waymarks.droppedThisSession.count
+        let found = waymarks.encounteredThisSession.count
+        return HStack(spacing: PaceSpacing.m) {
+            Image(systemName: "mappin.and.ellipse")
+                .font(.title3)
+                .foregroundStyle(.paceLime)
+                .frame(width: 44, height: 44)
+                .background(Color.paceLime.opacity(0.12), in: .circle)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(waymarkHeadline(left: left, found: found))
+                    .font(.subheadline.weight(.semibold))
+                Text(left > 0
+                     ? String(localized: "They'll find you next time you pass. Waymarks are kept even if you discard this activity.")
+                     : String(localized: "Each one now remembers you came back."))
+                    .font(.caption)
+                    .foregroundStyle(.paceTextSecondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(PaceSpacing.l)
+        .paceGlassCard(cornerRadius: PaceRadius.tile, tint: .paceLime)
+    }
+
+    private func waymarkHeadline(left: Int, found: Int) -> String {
+        switch (left, found) {
+        case (0, let f): return String(localized: "You walked back past \(f) memor\(f == 1 ? "y" : "ies")")
+        case (let l, 0): return String(localized: "You left \(l) waymark\(l == 1 ? "" : "s") on this route")
+        default: return String(localized: "Left \(left), found \(found) along the way")
+        }
     }
 
     /// What this route added to Terra.

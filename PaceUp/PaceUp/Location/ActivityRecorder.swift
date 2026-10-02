@@ -109,6 +109,19 @@ final class ActivityRecorder {
     /// looked like it did nothing at all.
     private(set) var pendingSummary: FinishedActivity?
 
+    // MARK: Hooks
+
+    /// Called when a new recording starts. Waymarks use it to reset their
+    /// per-session state.
+    @ObservationIgnored var onSessionStart: ((UUID) -> Void)?
+    /// Called with every accepted fix, foreground or background. Waymarks use
+    /// it to notice when the user walks back past one.
+    @ObservationIgnored var onAcceptedLocation: ((CLLocation) -> Void)?
+
+    /// The ID the activity will be saved under. Waymarks dropped mid-run are
+    /// linked to it.
+    var currentSessionID: UUID { sessionID }
+
     // MARK: Private
 
     private let provider = LocationProvider()
@@ -231,6 +244,7 @@ final class ActivityRecorder {
         UIApplication.shared.isIdleTimerDisabled = AppSettings.shared.keepScreenAwake
 
         state = .recording
+        onSessionStart?(sessionID)
     }
 
     func pause(automatic: Bool = false) {
@@ -471,6 +485,7 @@ final class ActivityRecorder {
             lastAcceptedPoint = point
 
             RecordingJournal.shared.append(point)
+            onAcceptedLocation?(location)
 
             emitSplitsIfNeeded()
         }
